@@ -58,7 +58,8 @@ class TestFetcher(unittest.TestCase):
     def test_fetch_html_error(self, mock_get):
         """Test HTML fetching with error."""
         # Mock error response
-        mock_get.side_effect = Exception("Connection error")
+        from requests.exceptions import RequestException
+        mock_get.side_effect = RequestException("Connection error")
 
         html, error = self.fetcher.fetch_html("https://example.com")
         

@@ -36,7 +36,8 @@ class Fetcher:
         """
         try:
             result = urlparse(url)
-            return all([result.scheme, result.netloc])
+            # Check that scheme is http or https, and netloc is not empty
+            return result.scheme in ('http', 'https') and bool(result.netloc)
         except Exception:
             return False
     

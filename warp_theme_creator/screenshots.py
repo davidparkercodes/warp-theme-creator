@@ -380,8 +380,9 @@ class ScreenshotExtractor:
             
             # Check for Redkey.io red accent
             r, g, b = color_rgb
-            if r > 180 and g < 60 and b < 60:  # Red-ish color
+            if r > 150 and g < 100 and b < 100:  # Red-ish color (more permissive)
                 redkey_accent = color
+                print(f"Found potential red accent: {color} - RGB: {r},{g},{b}")
             
             if self.get_color_distance(bg_rgb, color_rgb) < 50:
                 continue

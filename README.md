@@ -13,6 +13,7 @@ Warp Theme Creator is a command-line tool that creates custom themes for the [Wa
 - Customize theme name and output location
 - Adjust color brightness and saturation
 - Background image extraction from websites
+- SVG preview generation for themes
 
 ## Installation
 
@@ -99,6 +100,12 @@ warp-theme-creator https://example.com --extract-background
 
 # Extract background image with custom opacity
 warp-theme-creator https://example.com --extract-background --background-opacity 0.5
+
+# Generate SVG preview for the theme
+warp-theme-creator https://example.com --generate-preview
+
+# Generate SVG previews for all themes in the output directory
+warp-theme-creator https://example.com --generate-all-previews
 ```
 
 ### Installing Themes in Warp

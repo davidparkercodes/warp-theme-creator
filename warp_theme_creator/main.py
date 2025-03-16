@@ -16,6 +16,7 @@ from PIL import Image
 from warp_theme_creator.fetcher import Fetcher
 from warp_theme_creator.color_extractor import ColorExtractor
 from warp_theme_creator.theme_generator import ThemeGenerator
+from warp_theme_creator.preview import ThemePreviewGenerator
 from warp_theme_creator.utils import adjust_color_brightness, adjust_color_saturation
 
 
@@ -95,6 +96,18 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         type=int,
         default=5,
         help="Maximum number of images to analyze"
+    )
+    
+    parser.add_argument(
+        "--generate-preview",
+        action="store_true",
+        help="Generate SVG preview of the theme"
+    )
+    
+    parser.add_argument(
+        "--generate-all-previews",
+        action="store_true",
+        help="Generate SVG previews for all themes in the output directory"
     )
     
     return parser.parse_args(args)
@@ -432,11 +445,28 @@ def main(args: Optional[List[str]] = None) -> int:
     output_dir = os.path.abspath(parsed_args.output)
     theme_path = theme_generator.save_theme(theme, output_dir)
     
+    # Generate preview if requested
+    preview_path = None
+    if parsed_args.generate_preview:
+        print("Generating SVG preview...")
+        preview_generator = ThemePreviewGenerator()
+        preview_path = preview_generator.save_preview(theme, output_dir)
+        print(f"Preview generated: {preview_path}")
+    
+    # Generate all previews if requested
+    if parsed_args.generate_all_previews:
+        print("Generating previews for all themes...")
+        preview_generator = ThemePreviewGenerator()
+        preview_paths = preview_generator.generate_previews_for_directory(output_dir)
+        print(f"Generated {len(preview_paths)} previews in {os.path.join(output_dir, 'previews')}")
+    
     print(f"Theme generated successfully: {theme_path}")
     print(f"Install with:")
     print(f"  1. cp {theme_path} ~/.warp/themes/")
     if background_image_path:
         print(f"  2. cp {background_image_path} ~/.warp/themes/")
+    if preview_path:
+        print(f"View preview: {preview_path}")
     
     return 0
 

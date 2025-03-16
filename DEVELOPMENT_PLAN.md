@@ -21,28 +21,29 @@ Based on the Warp themes repository, we need to support:
 ## Implementation Checklist
 
 ### 1. Project Setup
-- [ ] Initialize Python project structure
-  - [ ] Create setup.py and requirements.txt
-  - [ ] Add __init__.py in all relevant directories
-- [ ] Set up dependencies
-  - [ ] requests for HTTP fetching
-  - [ ] BeautifulSoup and cssutils for HTML/CSS parsing
-  - [ ] Pillow for image processing
-  - [ ] colorthief for color extraction
-  - [ ] PyYAML for theme file generation
+- [x] Initialize Python project structure
+  - [x] Create setup.py and requirements.txt
+  - [x] Add __init__.py in all relevant directories
+- [x] Set up dependencies
+  - [x] requests for HTTP fetching
+  - [x] BeautifulSoup and cssutils for HTML/CSS parsing
+  - [x] Pillow for image processing
+  - [x] colorthief for color extraction
+  - [x] PyYAML for theme file generation
 
 ### 2. Core Modules Implementation
 
 #### Website Fetcher
-- [ ] Create fetcher.py module
-- [ ] Implement URL validation
-- [ ] Implement HTML content fetching
-- [ ] Add error handling for network issues
-- [ ] Add support for css file fetching
-- [ ] Add support for image fetching
+- [x] Create fetcher.py module
+- [x] Implement URL validation
+- [x] Implement HTML content fetching
+- [x] Add error handling for network issues
+- [x] Add support for css file fetching
+- [x] Add support for image fetching
+- [x] Extract CSS and image URLs from HTML
 
 #### Color Extractor
-- [ ] Create color_extractor.py module
+- [x] Create color_extractor.py module
 - [ ] Extract colors from CSS (background, text colors)
 - [ ] Extract colors from images (dominant colors)
 - [ ] Algorithm to select accent color
@@ -50,14 +51,14 @@ Based on the Warp themes repository, we need to support:
 - [ ] Color utility functions (brightness, contrast, etc.)
 
 #### Theme Generator
-- [ ] Create theme_generator.py module
+- [x] Create theme_generator.py module
 - [ ] Implement theme template structure
 - [ ] Create method to map extracted colors to theme format
 - [ ] Add YAML output generation
 - [ ] Add theme validation
 
 ### 3. CLI Interface
-- [ ] Create main.py with command-line interface
+- [x] Create main.py with command-line interface
 - [ ] Implement URL argument handling
 - [ ] Add theme customization options
   - [ ] Theme name setting
@@ -73,15 +74,15 @@ Based on the Warp themes repository, we need to support:
 - [ ] Create sample themes for testing
 
 ### 5. Testing and Validation
-- [ ] Create basic test framework
-- [ ] Write tests for URL fetching
-- [ ] Write tests for color extraction
-- [ ] Write tests for theme generation
+- [x] Create basic test framework
+- [x] Write tests for URL fetching
+- [x] Write tests for color extraction
+- [x] Write tests for theme generation
 - [ ] Test with various websites (dark, light, colorful)
 
 ### 6. Documentation and Finishing
-- [ ] Update README with detailed usage examples
-- [ ] Add documentation for customization options
+- [x] Update README with detailed usage examples
+- [x] Add documentation for customization options
 - [ ] Create example themes and previews
 - [ ] Ensure all code has docstrings and type hints
 - [ ] Final code cleanup and formatting
@@ -96,14 +97,15 @@ warp-theme-creator/
 │   ├── fetcher.py           # Website content fetching
 │   ├── color_extractor.py   # Color extraction logic
 │   ├── theme_generator.py   # Theme YAML generation
-│   ├── preview.py           # Preview generation
+│   ├── preview.py           # Preview generation (to be added)
 │   └── utils.py             # Helper functions
 ├── tests/
 │   ├── __init__.py 
 │   ├── test_fetcher.py
 │   ├── test_color_extractor.py
-│   └── test_theme_generator.py
-├── examples/                # Example themes
+│   ├── test_theme_generator.py
+│   └── test_utils.py
+├── themes/                  # Example themes
 ├── setup.py                 # Package setup
 └── requirements.txt         # Dependencies
 ```

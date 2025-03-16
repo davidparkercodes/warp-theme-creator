@@ -202,6 +202,137 @@ class TestFetcher(unittest.TestCase):
         self.assertIsNone(image)
         self.assertIn("error", error)
         self.assertIn("Connection error", error["error"])
+        
+    def test_extract_css_urls(self):
+        """Test extracting CSS URLs from HTML."""
+        html = """
+        <html>
+            <head>
+                <link rel="stylesheet" href="/styles/main.css">
+                <link rel="stylesheet" href="https://cdn.example.com/style.css">
+                <style>
+                    @import "/styles/imported.css";
+                    @import "https://cdn.example.com/imported.css";
+                    body { color: black; }
+                </style>
+            </head>
+            <body>
+                <div style="@import '/styles/inline.css';">Test</div>
+            </body>
+        </html>
+        """
+        base_url = "https://example.com"
+        css_urls = self.fetcher.extract_css_urls(html, base_url)
+        
+        # Expected URLs
+        expected_urls = [
+            "https://example.com/styles/main.css",
+            "https://cdn.example.com/style.css",
+            "https://example.com/styles/imported.css",
+            "https://cdn.example.com/imported.css",
+            "https://example.com/styles/inline.css"
+        ]
+        
+        # We don't care about the order, just that all are found
+        for url in expected_urls:
+            self.assertIn(url, css_urls)
+        
+        # Check that we found the expected number of unique URLs
+        self.assertEqual(len(css_urls), len(expected_urls))
+        
+    def test_extract_css_urls_empty_html(self):
+        """Test extracting CSS URLs from empty HTML."""
+        css_urls = self.fetcher.extract_css_urls("", "https://example.com")
+        self.assertEqual(css_urls, [])
+        
+    def test_extract_image_urls(self):
+        """Test extracting image URLs from HTML."""
+        html = """
+        <html>
+            <body>
+                <img src="/images/logo.png">
+                <img src="https://cdn.example.com/hero.jpg">
+                <div style="background-image: url('/images/bg.jpg');">Test</div>
+                <div style="background-image: url(https://cdn.example.com/bg.png);">Test</div>
+            </body>
+        </html>
+        """
+        base_url = "https://example.com"
+        image_urls = self.fetcher.extract_image_urls(html, base_url)
+        
+        # Expected URLs
+        expected_urls = [
+            "https://example.com/images/logo.png",
+            "https://cdn.example.com/hero.jpg",
+            "https://example.com/images/bg.jpg",
+            "https://cdn.example.com/bg.png"
+        ]
+        
+        # We don't care about the order, just that all are found
+        for url in expected_urls:
+            self.assertIn(url, image_urls)
+        
+        # Check that we found the expected number of unique URLs
+        self.assertEqual(len(image_urls), len(expected_urls))
+        
+    def test_extract_image_urls_empty_html(self):
+        """Test extracting image URLs from empty HTML."""
+        image_urls = self.fetcher.extract_image_urls("", "https://example.com")
+        self.assertEqual(image_urls, [])
+        
+    @mock.patch("warp_theme_creator.fetcher.Fetcher.fetch_html")
+    @mock.patch("warp_theme_creator.fetcher.Fetcher.extract_css_urls")
+    @mock.patch("warp_theme_creator.fetcher.Fetcher.extract_image_urls")
+    def test_fetch_all_resources_success(self, mock_extract_image_urls, mock_extract_css_urls, mock_fetch_html):
+        """Test successful fetching of all resources."""
+        # Mock responses
+        mock_fetch_html.return_value = ("<html></html>", {})
+        mock_extract_css_urls.return_value = ["https://example.com/style1.css", "https://example.com/style2.css"]
+        mock_extract_image_urls.return_value = ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+        
+        result = self.fetcher.fetch_all_resources("https://example.com")
+        
+        # Verify the result
+        self.assertEqual(result["html"], "<html></html>")
+        self.assertEqual(result["css_urls"], ["https://example.com/style1.css", "https://example.com/style2.css"])
+        self.assertEqual(result["image_urls"], ["https://example.com/image1.jpg", "https://example.com/image2.jpg"])
+        self.assertEqual(result["errors"], {})
+        
+        # Verify function calls
+        mock_fetch_html.assert_called_once_with("https://example.com")
+        mock_extract_css_urls.assert_called_once_with("<html></html>", "https://example.com")
+        mock_extract_image_urls.assert_called_once_with("<html></html>", "https://example.com")
+        
+    @mock.patch("warp_theme_creator.fetcher.Fetcher.fetch_html")
+    def test_fetch_all_resources_html_error(self, mock_fetch_html):
+        """Test fetching all resources with HTML error."""
+        # Mock error response
+        mock_fetch_html.return_value = (None, {"error": "Connection error"})
+        
+        result = self.fetcher.fetch_all_resources("https://example.com")
+        
+        # Verify the result
+        self.assertEqual(result["html"], "")
+        self.assertEqual(result["css_urls"], [])
+        self.assertEqual(result["image_urls"], [])
+        self.assertEqual(result["errors"], {"html": "Connection error"})
+        
+    @mock.patch("warp_theme_creator.fetcher.Fetcher.fetch_html")
+    @mock.patch("warp_theme_creator.fetcher.Fetcher.extract_css_urls")
+    @mock.patch("warp_theme_creator.fetcher.Fetcher.extract_image_urls")
+    def test_fetch_all_resources_max_limits(self, mock_extract_image_urls, mock_extract_css_urls, mock_fetch_html):
+        """Test resource limits in fetch_all_resources."""
+        # Mock responses with more items than limits
+        mock_fetch_html.return_value = ("<html></html>", {})
+        mock_extract_css_urls.return_value = [f"https://example.com/style{i}.css" for i in range(20)]
+        mock_extract_image_urls.return_value = [f"https://example.com/image{i}.jpg" for i in range(30)]
+        
+        # Set limits lower than the number of items
+        result = self.fetcher.fetch_all_resources("https://example.com", max_css=5, max_images=10)
+        
+        # Verify the result respects limits
+        self.assertEqual(len(result["css_urls"]), 5)
+        self.assertEqual(len(result["image_urls"]), 10)
 
 
 if __name__ == "__main__":

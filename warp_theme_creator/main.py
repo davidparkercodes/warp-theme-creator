@@ -269,6 +269,90 @@ def extract_background_image(resources: Dict, theme_name: str, output_dir: str) 
     return None
 
 
+def identify_logo_images(resources: Dict) -> Dict[str, bytes]:
+    """Identifies potential logo images from website resources.
+
+    Args:
+        resources: Fetched website resources
+
+    Returns:
+        Dictionary of logo URL to image data
+    """
+    logo_images = {}
+    image_contents = resources.get('image_contents', {})
+    
+    # Skip if no images
+    if not image_contents:
+        return logo_images
+        
+    # Process images to find potential logos
+    scored_images = []
+    
+    for image_url, image_data in image_contents.items():
+        score = 0
+        try:
+            # Parse image
+            with BytesIO(image_data) as img_file:
+                try:
+                    with Image.open(img_file) as img:
+                        if not img.format:
+                            continue
+                            
+                        # Image dimensions
+                        width, height = img.size
+                        size = width * height
+                        
+                        # Logo heuristics:
+                        
+                        # 1. Logos are typically smaller than screenshots/photos
+                        if size < 50000:  # Small image
+                            score += 20
+                        elif size < 150000:  # Medium image
+                            score += 10
+                        else:  # Large image (likely screenshot)
+                            score -= 10
+                        
+                        # 2. Logos often have transparency
+                        if img.mode == 'RGBA':
+                            score += 10
+                        
+                        # 3. Logos often have specific keywords in the URL
+                        url_lower = image_url.lower()
+                        if any(keyword in url_lower for keyword in ['logo', 'brand', 'icon', 'symbol', 'header']):
+                            score += 25
+                        
+                        # 4. Logos usually have reasonable aspect ratios
+                        aspect_ratio = width / height if height > 0 else 0
+                        if 0.5 <= aspect_ratio <= 2.0:  # Reasonable aspect ratio
+                            score += 10
+                        else:  # Very wide or very tall
+                            score -= 5
+                            
+                        # 5. SVG and PNG are common for logos
+                        if image_url.lower().endswith(('.svg', '.png')):
+                            score += 15
+                            
+                        # Add to scored images
+                        scored_images.append({
+                            'url': image_url,
+                            'data': image_data,
+                            'score': score,
+                            'size': size
+                        })
+                except Exception:
+                    continue
+        except Exception:
+            continue
+    
+    # Sort images by score (descending)
+    scored_images.sort(key=lambda x: x['score'], reverse=True)
+    
+    # Take top 3 potential logo images
+    top_images = scored_images[:3] if scored_images else []
+    
+    # Return as dict
+    return {img['url']: img['data'] for img in top_images}
+
 def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefer_light: bool = False) -> Dict[str, str]:
     """Extract theme colors from fetched website resources.
 
@@ -309,27 +393,56 @@ def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefe
             categorized_colors[category].extend(colors)
             all_colors.extend(colors)
     
-    # Process images
-    image_contents = resources.get('image_contents', {})
-    for image_url, image_data in image_contents.items():
-        # Use enhanced color extraction for better results
+    # Process images - prioritize logo images
+    logo_images = identify_logo_images(resources)
+    
+    # First extract colors from logo images (higher priority)
+    logo_colors = []
+    for image_url, image_data in logo_images.items():
         image_colors = color_extractor.extract_image_colors_enhanced(image_data)
         categorized_colors['image'].extend(image_colors)
+        logo_colors.extend(image_colors)
         all_colors.extend(image_colors)
+    
+    # Only use general images if we couldn't find good logo colors
+    if not logo_colors:
+        print("No logo detected, using general site imagery...")
+        image_contents = resources.get('image_contents', {})
+        for image_url, image_data in image_contents.items():
+            # Skip logos we already processed
+            if image_url in logo_images:
+                continue
+            # Use enhanced color extraction for better results
+            image_colors = color_extractor.extract_image_colors_enhanced(image_data)
+            categorized_colors['image'].extend(image_colors)
+            all_colors.extend(image_colors)
+    else:
+        print(f"Using colors from {len(logo_images)} potential logo/brand images...")
     
     # Remove duplicates
     all_colors = list(set(all_colors))
     for category in categorized_colors:
         categorized_colors[category] = list(set(categorized_colors[category]))
     
-    # Extract accent color (prioritize accent category, then image, then others)
-    accent_candidates = (
-        categorized_colors['accent'] + 
-        categorized_colors['image'] + 
-        categorized_colors['border'] +
-        categorized_colors['color'] +
-        categorized_colors['background']
-    )
+    # Extract accent color (prioritize logo colors if available)
+    if logo_colors:
+        # Logo colors get high priority for accent
+        accent_candidates = (
+            logo_colors +
+            categorized_colors['accent'] + 
+            categorized_colors['border'] +
+            categorized_colors['color'] +
+            categorized_colors['background']
+        )
+    else:
+        # Original priority
+        accent_candidates = (
+            categorized_colors['accent'] + 
+            categorized_colors['image'] + 
+            categorized_colors['border'] +
+            categorized_colors['color'] +
+            categorized_colors['background']
+        )
     accent_color = color_extractor.select_accent_color(accent_candidates) if accent_candidates else "#0087D7"
     
     # Extract background color (prioritize background category)

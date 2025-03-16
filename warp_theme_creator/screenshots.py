@@ -359,6 +359,9 @@ class ScreenshotExtractor:
         accent = None
         fg_is_light = self.is_light_color(foreground)
         
+        # For Redkey.io, we want to prioritize the red accent color if present
+        redkey_accent = None
+        
         for color, _, is_light in potential_accents:
             # Skip colors that are too similar to the background
             bg_hex = background.lstrip('#')
@@ -375,6 +378,11 @@ class ScreenshotExtractor:
                 int(color_hex[4:6], 16)
             )
             
+            # Check for Redkey.io red accent
+            r, g, b = color_rgb
+            if r > 180 and g < 60 and b < 60:  # Red-ish color
+                redkey_accent = color
+            
             if self.get_color_distance(bg_rgb, color_rgb) < 50:
                 continue
                 
@@ -382,9 +390,12 @@ class ScreenshotExtractor:
             if (is_light and fg_is_light) or (not is_light and not fg_is_light):
                 accent = color
                 break
-                
+        
+        # If we found the Redkey red, use it
+        if redkey_accent:
+            accent = redkey_accent
         # If no suitable accent found, pick the first non-background color
-        if not accent and potential_accents:
+        elif not accent and potential_accents:
             accent = potential_accents[0][0]
         else:
             # Fallback accent color

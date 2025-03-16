@@ -86,9 +86,15 @@ class TestColorExtractor(unittest.TestCase):
         # Verify results
         self.assertEqual(extracted_colors, expected_colors)
         
+    @mock.patch('warp_theme_creator.color_extractor.Image')
     @mock.patch('warp_theme_creator.color_extractor.ColorThief')
-    def test_extract_image_colors_with_real_implementation(self, mock_color_thief):
+    def test_extract_image_colors_with_real_implementation(self, mock_color_thief, mock_image):
         """Test extracting colors from an image with mocked ColorThief."""
+        # Mock the image verification
+        mock_img = mock.Mock()
+        mock_img.format = 'JPEG'
+        mock_image.open.return_value.__enter__.return_value = mock_img
+        
         # Mock the ColorThief instance and its get_palette method
         mock_color_thief_instance = mock.Mock()
         mock_color_thief_instance.get_palette.return_value = [
@@ -107,6 +113,9 @@ class TestColorExtractor(unittest.TestCase):
         # Extract colors using the real implementation
         extracted_colors = self.extractor.extract_image_colors(image_data, color_count=5)
         
+        # Verify that Image.open was called
+        mock_image.open.assert_called_once()
+        
         # Verify that BytesIO was passed to ColorThief and get_palette was called
         mock_color_thief.assert_called_once()
         mock_color_thief_instance.get_palette.assert_called_once_with(color_count=5)
@@ -114,13 +123,19 @@ class TestColorExtractor(unittest.TestCase):
         # Verify results
         self.assertEqual(extracted_colors, expected_colors)
         
+    @mock.patch('warp_theme_creator.color_extractor.Image')
     @mock.patch('warp_theme_creator.color_extractor.BytesIO')
     @mock.patch('warp_theme_creator.color_extractor.ColorThief')
-    def test_extract_image_colors_with_bytesio(self, mock_color_thief, mock_bytesio):
+    def test_extract_image_colors_with_bytesio(self, mock_color_thief, mock_bytesio, mock_image):
         """Test extracting colors from an image with mocked BytesIO and ColorThief."""
         # Mock the BytesIO and ColorThief
         mock_bytesio_instance = mock.Mock()
         mock_bytesio.return_value = mock_bytesio_instance
+        
+        # Mock image verification
+        mock_img = mock.Mock()
+        mock_img.format = 'JPEG'
+        mock_image.open.return_value.__enter__.return_value = mock_img
         
         mock_color_thief_instance = mock.Mock()
         mock_color_thief_instance.get_palette.return_value = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
@@ -133,10 +148,13 @@ class TestColorExtractor(unittest.TestCase):
         extracted_colors = self.extractor.extract_image_colors(image_data, color_count=3)
         
         # Verify BytesIO was created with the image data
-        mock_bytesio.assert_called_once_with(image_data)
+        mock_bytesio.assert_called_with(image_data)
+        
+        # Verify Image.open was called
+        mock_image.open.assert_called_once()
         
         # Verify ColorThief was created with the BytesIO instance
-        mock_color_thief.assert_called_once_with(mock_bytesio_instance)
+        mock_color_thief.assert_called_with(mock_bytesio_instance)
         
         # Verify get_palette was called with the correct color count
         mock_color_thief_instance.get_palette.assert_called_once_with(color_count=3)

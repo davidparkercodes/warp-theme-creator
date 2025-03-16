@@ -241,12 +241,24 @@ class ColorExtractor:
         try:
             # For unit tests, use a simpler approach that's easier to mock
             image_file = BytesIO(image_data)
+            
+            # Open with PIL first to validate image format
+            try:
+                with Image.open(image_file) as img:
+                    img_format = img.format
+                    if not img_format:
+                        return []  # Not a valid image
+                    image_file.seek(0)  # Reset file pointer
+            except Exception:
+                return []  # Not a valid image
+                
+            # Now try to extract colors
             color_thief = ColorThief(image_file)
             palette = color_thief.get_palette(color_count=color_count)
             return [self.rgb_to_hex(color) for color in palette]
             
         except Exception as e:
-            print(f"Error extracting colors from image: {e}")
+            # Handle silently in production
             return []
             
     def extract_image_colors_enhanced(self, image_data: bytes, color_count: int = 8) -> List[str]:
@@ -262,53 +274,71 @@ class ColorExtractor:
         try:
             image_file = BytesIO(image_data)
             
+            # Open with PIL first to validate image format
+            try:
+                with Image.open(image_file) as img:
+                    img_format = img.format
+                    if not img_format:
+                        return []  # Not a valid image
+                    image_file.seek(0)  # Reset file pointer
+            except Exception:
+                return []  # Not a valid image
+            
             # Use both color thief and image analysis for better results
             colors = []
             
             # Use ColorThief for dominant colors
-            color_thief = ColorThief(image_file)
-            palette = color_thief.get_palette(color_count=color_count)
-            colors.extend([self.rgb_to_hex(color) for color in palette])
-            
-            # Reset file position for PIL
-            image_file.seek(0)
+            try:
+                color_thief = ColorThief(image_file)
+                palette = color_thief.get_palette(color_count=color_count)
+                colors.extend([self.rgb_to_hex(color) for color in palette])
+                
+                # Reset file position for PIL
+                image_file.seek(0)
+            except Exception:
+                # If ColorThief fails, continue with just PIL analysis
+                image_file.seek(0)
             
             # Use PIL for additional analysis
-            img = Image.open(image_file)
-            # Resize for faster processing
-            img.thumbnail((100, 100))
-            
-            # Convert to RGB if not already
-            if img.mode != 'RGB':
-                img = img.convert('RGB')
+            try:
+                img = Image.open(image_file)
+                # Resize for faster processing
+                img.thumbnail((100, 100))
                 
-            # Get colors from edges (often important for UI elements)
-            width, height = img.size
-            edge_pixels = []
-            
-            # Top and bottom edges
-            for x in range(width):
-                edge_pixels.append(img.getpixel((x, 0)))
-                edge_pixels.append(img.getpixel((x, height-1)))
+                # Convert to RGB if not already
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                    
+                # Get colors from edges (often important for UI elements)
+                width, height = img.size
+                edge_pixels = []
                 
-            # Left and right edges
-            for y in range(height):
-                edge_pixels.append(img.getpixel((0, y)))
-                edge_pixels.append(img.getpixel((width-1, y)))
+                # Top and bottom edges
+                for x in range(width):
+                    edge_pixels.append(img.getpixel((x, 0)))
+                    edge_pixels.append(img.getpixel((x, height-1)))
+                    
+                # Left and right edges
+                for y in range(height):
+                    edge_pixels.append(img.getpixel((0, y)))
+                    edge_pixels.append(img.getpixel((width-1, y)))
+                    
+                # Count frequencies of edge colors
+                edge_counter = Counter(edge_pixels)
+                most_common_edges = edge_counter.most_common(3)
                 
-            # Count frequencies of edge colors
-            edge_counter = Counter(edge_pixels)
-            most_common_edges = edge_counter.most_common(3)
-            
-            # Add edge colors to the palette
-            for color, _ in most_common_edges:
-                colors.append(self.rgb_to_hex(color))
+                # Add edge colors to the palette
+                for color, _ in most_common_edges:
+                    colors.append(self.rgb_to_hex(color))
+            except Exception:
+                # If PIL analysis fails, just use whatever colors we have so far
+                pass
                 
             # Remove duplicates and return
             return list(set(colors))
             
-        except Exception as e:
-            print(f"Error extracting colors from image: {e}")
+        except Exception:
+            # Handle silently in production
             return []
     
     def get_color_distance(self, color1: str, color2: str) -> float:

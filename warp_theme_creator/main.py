@@ -171,7 +171,7 @@ def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefe
         inline_styles = re.findall(inline_css_pattern, html_content)
         
         for style in inline_styles:
-            css_colors = color_extractor.extract_css_colors(style)
+            css_colors = color_extractor.extract_css_colors_categorized(style)
             for category, colors in css_colors.items():
                 categorized_colors[category].extend(colors)
                 all_colors.extend(colors)
@@ -179,7 +179,7 @@ def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefe
     # Process CSS files
     css_contents = resources.get('css_contents', {})
     for css_url, css_content in css_contents.items():
-        css_colors = color_extractor.extract_css_colors(css_content)
+        css_colors = color_extractor.extract_css_colors_categorized(css_content)
         for category, colors in css_colors.items():
             categorized_colors[category].extend(colors)
             all_colors.extend(colors)
@@ -187,7 +187,8 @@ def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefe
     # Process images
     image_contents = resources.get('image_contents', {})
     for image_url, image_data in image_contents.items():
-        image_colors = color_extractor.extract_image_colors(image_data)
+        # Use enhanced color extraction for better results
+        image_colors = color_extractor.extract_image_colors_enhanced(image_data)
         categorized_colors['image'].extend(image_colors)
         all_colors.extend(image_colors)
     

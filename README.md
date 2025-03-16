@@ -1,60 +1,167 @@
 # Warp Theme Creator
 
-A Python tool to automatically generate Warp terminal themes from website color schemes.
+Generate custom themes for the Warp terminal by extracting colors from websites.
 
 ## Overview
 
-Warp Theme Creator extracts colors from websites and generates custom themes for the [Warp Terminal](https://www.warp.dev/). Simply provide a URL, and the tool will analyze the website's color palette to create a personalized theme.
+Warp Theme Creator is a command-line tool that creates custom themes for the [Warp Terminal](https://www.warp.dev/). It works by analyzing the colors used on websites and generating a theme file that can be used with Warp.
 
 ## Features
 
-- Extract dominant colors from websites (both CSS and images)
-- Generate Warp-compatible theme files in YAML format
-- Support for background images extraction
-- Customizable color adjustments
-- Preview generation for created themes
-- Simple command-line interface
+- Extract colors from website CSS and images
+- Generate YAML theme files compatible with Warp terminal
+- Customize theme name and output location
+- Adjust color brightness and saturation
+- Optional background image extraction (coming soon)
 
 ## Installation
 
+### Quick Setup (Recommended)
+
+Clone the repository and run the setup script:
 ```bash
-# Clone the repository
 git clone https://github.com/davidparkercodes/warp-theme-creator.git
 cd warp-theme-creator
+chmod +x setup.sh
+./setup.sh
+```
 
-# Set up virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+This script will:
+- Create a virtual environment
+- Install all dependencies
+- Set up the package in development mode
+- Configure direnv for automatic environment activation
 
-# Install dependencies
-pip install -r requirements.txt
+### Manual Setup
 
-# Install the package in development mode
-pip install -e .
+If you prefer to set up manually:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/davidparkercodes/warp-theme-creator.git
+   cd warp-theme-creator
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   
+   # On macOS/Linux:
+   source venv/bin/activate
+   
+   # On Windows:
+   # venv\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Install in development mode:
+   ```bash
+   pip install -e .
+   ```
+
+### Regular Installation
+
+Once the package is published to PyPI (coming soon):
+```bash
+pip install warp-theme-creator
 ```
 
 ## Usage
 
-```bash
-# Basic usage with a URL
-warp-theme-creator https://example.com
+### Basic Usage
 
-# Customize theme name
+```bash
+# Using the module directly
+python -m warp_theme_creator.main https://example.com
+
+# Or using the console script (if installed)
+warp-theme-creator https://example.com
+```
+
+### Options
+
+```bash
+# Custom theme name
 warp-theme-creator https://example.com --name "My Custom Theme"
 
-# Adjust colors
+# Custom output directory
+warp-theme-creator https://example.com --output ~/warp-themes
+
+# Adjust color brightness and saturation
 warp-theme-creator https://example.com --brightness 1.2 --saturation 0.9
 
-# Extract background image
+# Extract background image (coming soon)
 warp-theme-creator https://example.com --extract-background
-
-# Save to specific location
-warp-theme-creator https://example.com --output ~/warp/themes/
 ```
+
+### Installing Themes in Warp
+
+After generating a theme, copy it to Warp's themes directory:
+```bash
+cp themes/example.yaml ~/.warp/themes/
+```
+
+Then select the theme in Warp's settings.
 
 ## Development
 
-Please refer to the [Development Plan](DEVELOPMENT_PLAN.md) for more information about the project structure and roadmap.
+### Development Helper Script
+
+We provide a helper script that simplifies common development tasks:
+
+```bash
+# Make the script executable
+chmod +x dev.sh
+
+# Show available commands
+./dev.sh
+
+# Run tests
+./dev.sh test
+
+# Check code coverage
+./dev.sh coverage
+
+# Lint and format check
+./dev.sh lint
+
+# Format code with black
+./dev.sh format
+
+# Clean up build artifacts
+./dev.sh clean
+
+# Run the tool with a URL
+./dev.sh run https://example.com
+```
+
+### Manual Development Tasks
+
+If you prefer not to use the helper script:
+
+#### Running Tests
+
+```bash
+pytest
+```
+
+#### Code Coverage
+
+```bash
+pytest --cov=warp_theme_creator --cov-report=term-missing
+```
+
+#### Code Formatting and Linting
+
+```bash
+black warp_theme_creator
+flake8 warp_theme_creator
+mypy warp_theme_creator
+```
 
 ### Development Workflow
 
@@ -68,3 +175,7 @@ For detailed contribution guidelines, please see [UPDATE_RULES.md](UPDATE_RULES.
 ## License
 
 MIT
+
+## Credits
+
+Created by David Parker

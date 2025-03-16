@@ -66,8 +66,9 @@ case $command in
         ;;
     run)
         url=${1:-"https://example.com"}
-        echo -e "${BLUE}Running warp-theme-creator with URL: ${url}${NC}"
-        python -m warp_theme_creator.main "${url}"
+        shift # Remove the URL from the argument list
+        echo -e "${BLUE}Running warp-theme-creator with URL: ${url} $@${NC}"
+        python -m warp_theme_creator.main "${url}" "$@"
         echo -e "${GREEN}Theme generated in themes/ directory.${NC}"
         ;;
     *)

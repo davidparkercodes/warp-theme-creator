@@ -96,8 +96,20 @@ class TestMain(unittest.TestCase):
         mock_color_extractor.return_value = mock_color_extractor_instance
         mock_theme_generator.return_value = mock_theme_generator_instance
         
-        # Mock fetch_html to return success
-        mock_fetcher_instance.fetch_html.return_value = ("<html>Test</html>", {})
+        # Mock fetch_all_resources to return success
+        mock_fetcher_instance.fetch_all_resources.return_value = {
+            'html': "<html>Test</html>",
+            'css_urls': [],
+            'image_urls': [],
+            'css_contents': {},
+            'image_contents': {}
+        }
+        
+        # Mock color extraction
+        mock_color_extractor_instance.extract_css_colors.return_value = {}
+        mock_color_extractor_instance.select_accent_color.return_value = "#0087D7"
+        mock_color_extractor_instance.select_background_color.return_value = "#1E1E1E"
+        mock_color_extractor_instance.select_foreground_color.return_value = "#FFFFFF"
         
         # Mock terminal colors generation
         mock_color_extractor_instance.generate_terminal_colors.return_value = {
@@ -133,7 +145,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(exit_code, 0)
             
             # Verify methods were called
-            mock_fetcher_instance.fetch_html.assert_called_once_with("https://example.com")
+            mock_fetcher_instance.fetch_all_resources.assert_called_once()
             mock_color_extractor_instance.generate_terminal_colors.assert_called_once()
             mock_theme_generator_instance.create_theme.assert_called_once()
             mock_theme_generator_instance.save_theme.assert_called_once()
@@ -145,8 +157,10 @@ class TestMain(unittest.TestCase):
         mock_fetcher_instance = mock.MagicMock()
         mock_fetcher.return_value = mock_fetcher_instance
         
-        # Mock fetch_html to return error
-        mock_fetcher_instance.fetch_html.return_value = (None, {"error": "Connection error"})
+        # Mock fetch_all_resources to return error
+        mock_fetcher_instance.fetch_all_resources.return_value = {
+            'errors': {"error": "Connection error"}
+        }
         
         # Capture stdout to verify error message
         with mock.patch('sys.stdout'):
@@ -158,7 +172,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(exit_code, 1)
             
             # Verify method was called
-            mock_fetcher_instance.fetch_html.assert_called_once_with("https://example.com")
+            mock_fetcher_instance.fetch_all_resources.assert_called_once()
 
 
 if __name__ == "__main__":

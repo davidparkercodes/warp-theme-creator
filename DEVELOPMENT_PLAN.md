@@ -44,28 +44,28 @@ Based on the Warp themes repository, we need to support:
 
 #### Color Extractor
 - [x] Create color_extractor.py module
-- [ ] Extract colors from CSS (background, text colors)
-- [ ] Extract colors from images (dominant colors)
-- [ ] Algorithm to select accent color
-- [ ] Algorithm to generate complementary terminal colors
-- [ ] Color utility functions (brightness, contrast, etc.)
+- [x] Extract colors from CSS (background, text colors)
+- [x] Extract colors from images (dominant colors)
+- [x] Algorithm to select accent color
+- [x] Algorithm to generate complementary terminal colors
+- [x] Color utility functions (brightness, contrast, etc.)
 
 #### Theme Generator
 - [x] Create theme_generator.py module
-- [ ] Implement theme template structure
-- [ ] Create method to map extracted colors to theme format
-- [ ] Add YAML output generation
-- [ ] Add theme validation
+- [x] Implement theme template structure
+- [x] Create method to map extracted colors to theme format
+- [x] Add YAML output generation
+- [x] Add theme validation
 
 ### 3. CLI Interface
 - [x] Create main.py with command-line interface
-- [ ] Implement URL argument handling
-- [ ] Add theme customization options
-  - [ ] Theme name setting
-  - [ ] Output path setting
-  - [ ] Color adjustment options
-- [ ] Add progress feedback
-- [ ] Add error handling and user messages
+- [x] Implement URL argument handling
+- [x] Add theme customization options
+  - [x] Theme name setting
+  - [x] Output path setting
+  - [x] Color adjustment options
+- [x] Add progress feedback
+- [x] Add error handling and user messages
 
 ### 4. Additional Features
 - [ ] Add background image extraction option

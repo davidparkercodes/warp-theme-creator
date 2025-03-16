@@ -85,6 +85,82 @@ class TestColorExtractor(unittest.TestCase):
         
         # Verify results
         self.assertEqual(extracted_colors, expected_colors)
+        
+    @mock.patch('warp_theme_creator.color_extractor.ColorThief')
+    def test_extract_image_colors_with_real_implementation(self, mock_color_thief):
+        """Test extracting colors from an image with mocked ColorThief."""
+        # Mock the ColorThief instance and its get_palette method
+        mock_color_thief_instance = mock.Mock()
+        mock_color_thief_instance.get_palette.return_value = [
+            (255, 0, 0),  # Red
+            (0, 255, 0),  # Green
+            (0, 0, 255),  # Blue
+            (255, 255, 0),  # Yellow
+            (0, 255, 255)   # Cyan
+        ]
+        mock_color_thief.return_value = mock_color_thief_instance
+        
+        # Test with dummy image data
+        image_data = b'image data'
+        expected_colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff']
+        
+        # Extract colors using the real implementation
+        extracted_colors = self.extractor.extract_image_colors(image_data, color_count=5)
+        
+        # Verify that BytesIO was passed to ColorThief and get_palette was called
+        mock_color_thief.assert_called_once()
+        mock_color_thief_instance.get_palette.assert_called_once_with(color_count=5)
+        
+        # Verify results
+        self.assertEqual(extracted_colors, expected_colors)
+        
+    @mock.patch('warp_theme_creator.color_extractor.BytesIO')
+    @mock.patch('warp_theme_creator.color_extractor.ColorThief')
+    def test_extract_image_colors_with_bytesio(self, mock_color_thief, mock_bytesio):
+        """Test extracting colors from an image with mocked BytesIO and ColorThief."""
+        # Mock the BytesIO and ColorThief
+        mock_bytesio_instance = mock.Mock()
+        mock_bytesio.return_value = mock_bytesio_instance
+        
+        mock_color_thief_instance = mock.Mock()
+        mock_color_thief_instance.get_palette.return_value = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+        mock_color_thief.return_value = mock_color_thief_instance
+        
+        # Test with dummy image data
+        image_data = b'image data'
+        
+        # Extract colors
+        extracted_colors = self.extractor.extract_image_colors(image_data, color_count=3)
+        
+        # Verify BytesIO was created with the image data
+        mock_bytesio.assert_called_once_with(image_data)
+        
+        # Verify ColorThief was created with the BytesIO instance
+        mock_color_thief.assert_called_once_with(mock_bytesio_instance)
+        
+        # Verify get_palette was called with the correct color count
+        mock_color_thief_instance.get_palette.assert_called_once_with(color_count=3)
+        
+        # Verify the colors were converted to hex
+        self.assertEqual(extracted_colors, ['#ff0000', '#00ff00', '#0000ff'])
+        
+    def test_extract_image_colors_exception(self):
+        """Test extracting colors from an image with exception."""
+        # Create a mock image data that will cause an exception when processed
+        image_data = b'invalid image data'
+        
+        # Create a subclass with an overridden method that raises an exception
+        class ExceptionColorThief:
+            def __init__(self, image_file):
+                raise Exception("Test exception")
+        
+        # Patch ColorThief to raise an exception
+        with mock.patch('warp_theme_creator.color_extractor.ColorThief', ExceptionColorThief):
+            # Extract colors should return an empty list when an exception occurs
+            extracted_colors = self.extractor.extract_image_colors(image_data)
+            
+            # Verify empty list is returned on exception
+            self.assertEqual(extracted_colors, [])
 
     def test_is_dark_color(self):
         """Test detection of dark colors."""
@@ -99,6 +175,19 @@ class TestColorExtractor(unittest.TestCase):
             with self.subTest(color=color):
                 self.assertFalse(self.extractor._is_dark_color(color))
 
+    def test_select_accent_color(self):
+        """Test accent color selection."""
+        # Test with non-empty list
+        colors = ['#FF0000', '#00FF00', '#0000FF']
+        self.assertEqual(self.extractor.select_accent_color(colors), '#FF0000')
+        
+        # Test with single color in list
+        colors = ['#FF0000']
+        self.assertEqual(self.extractor.select_accent_color(colors), '#FF0000')
+        
+        # Test with empty list - should return default color
+        self.assertEqual(self.extractor.select_accent_color([]), '#0087D7')
+        
     def test_select_background_color(self):
         """Test background color selection."""
         # Test with list containing dark colors

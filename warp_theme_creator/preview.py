@@ -8,58 +8,101 @@ from typing import Dict, Any, List, Optional
 import yaml
 
 
-# SVG template for theme preview
-DEFAULT_SVG_TEMPLATE = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 145"><rect width="300" height="145" fill="{background}" class="Dynamic" rx="5"/><text x="15" y="15" fill="{foreground}" class="Dynamic" font-family="monospace" font-size=".6em">ls</text><text x="15" y="30" fill="{blue}" class="Dynamic" font-family="monospace" font-size=".6em">
-dir
-</text><text x="65" y="30" fill="{red}" class="Dynamic" font-family="monospace" font-size=".6em">
-executable
-</text><text x="175" y="30" fill="{foreground}" class="Dynamic" font-family="monospace" font-size=".6em">
-file
-</text><path stroke="{foreground}" d="M0 40h300" class="Dynamic" style="stroke-width:.2"/><text x="15" y="55" fill="{foreground}" class="Dynamic" font-family="monospace" font-size=".6em">bash ~/colors.sh</text><text x="15" y="70" fill="{foreground}" class="Dynamic" font-family="monospace" font-size=".6em">
-normal:
-</text><text x="55" y="70" fill="{black}" class="Dynamic" font-family="monospace" font-size=".6em">
-black
-</text><text x="85" y="70" fill="{red}" class="Dynamic" font-family="monospace" font-size=".6em">
-red
-</text><text x="105" y="70" fill="{green}" class="Dynamic" font-family="monospace" font-size=".6em">
-green
-</text><text x="135" y="70" fill="{yellow}" class="Dynamic" font-family="monospace" font-size=".6em">
-yellow
-</text><text x="170" y="70" fill="{blue}" class="Dynamic" font-family="monospace" font-size=".6em">
-blue
-</text><text x="195" y="70" fill="{magenta}" class="Dynamic" font-family="monospace" font-size=".6em">
-magenta
-</text><text x="235" y="70" fill="{cyan}" class="Dynamic" font-family="monospace" font-size=".6em">
-cyan
-</text><text x="260" y="70" fill="{white}" class="Dynamic" font-family="monospace" font-size=".6em">
-white
-</text><text x="15" y="85" fill="{foreground}" class="Dynamic" font-family="monospace" font-size=".6em">
-bright:
-</text><text x="55" y="85" fill="{brblack}" class="Dynamic" font-family="monospace" font-size=".6em">
-black
-</text><text x="85" y="85" fill="{brred}" class="Dynamic" font-family="monospace" font-size=".6em">
-red
-</text><text x="105" y="85" fill="{brgreen}" class="Dynamic" font-family="monospace" font-size=".6em">
-green
-</text><text x="135" y="85" fill="{bryellow}" class="Dynamic" font-family="monospace" font-size=".6em">
-yellow
-</text><text x="170" y="85" fill="{brblue}" class="Dynamic" font-family="monospace" font-size=".6em">
-blue
-</text><text x="195" y="85" fill="{brmagenta}" class="Dynamic" font-family="monospace" font-size=".6em">
-magenta
-</text><text x="235" y="85" fill="{brcyan}" class="Dynamic" font-family="monospace" font-size=".6em">
-cyan
-</text><text x="260" y="85" fill="{brwhite}" class="Dynamic" font-family="monospace" font-size=".6em">
-white
-</text><path stroke="{foreground}" d="M0 95h300" class="Dynamic" style="stroke-width:.2"/><text x="15" y="110" fill="{magenta}" class="Dynamic" font-family="monospace" font-size=".6em">
-~/project
-</text><text x="65" y="110" fill="{green}" class="Dynamic" font-family="monospace" font-size=".6em">
-git(
-    </text><text x="85" y="110" fill="{yellow}" class="Dynamic" font-family="monospace" font-size=".6em">
-      main
-    </text><text x="113" y="110" fill="{green}" class="Dynamic" font-family="monospace" font-size=".6em">
-      )
-</text><path stroke="{accent}" d="M15 120v10" class="Dynamic" style="stroke-width:2"/></svg>'''
+# SVG template for theme preview - styled more like Warp terminal
+DEFAULT_SVG_TEMPLATE = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <!-- Terminal Window with Warp-like styling -->
+  <defs>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="{accent}" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="{accent}" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Main Terminal Window -->
+  <rect width="800" height="450" fill="{background}" rx="10" ry="10"/>
+  
+  <!-- Window Controls Bar -->
+  <rect x="0" y="0" width="800" height="30" fill="#111111" rx="10" ry="10"/>
+  <circle cx="20" cy="15" r="7" fill="#FF5F56"/>
+  <circle cx="45" cy="15" r="7" fill="#FFBD2E"/>
+  <circle cx="70" cy="15" r="7" fill="#27C93F"/>
+  
+  <!-- Accent color indicator - vertical bar on left side -->
+  <rect x="0" y="30" width="4" height="420" fill="{accent}"/>
+  
+  <!-- Top Command with accent color in prompt -->
+  <text x="20" y="60" fill="{foreground}" font-family="monospace" font-size="14">
+    <tspan fill="{accent}">➜</tspan>  <tspan fill="{green}">~/project</tspan> <tspan fill="{brblue}">git:(</tspan><tspan fill="{brred}">feature/enhanced-svg-preview</tspan><tspan fill="{brblue}">)</tspan> 
+  </text>
+  
+  <!-- Commands and outputs -->
+  <text x="20" y="90" fill="{foreground}" font-family="monospace" font-size="14">
+    $ warp-theme-creator https://example.com --generate-preview
+  </text>
+  
+  <text x="20" y="120" fill="{magenta}" font-family="monospace" font-size="14">
+    Fetching HTML content from https://example.com...
+  </text>
+  
+  <text x="20" y="150" fill="{magenta}" font-family="monospace" font-size="14">
+    Extracting colors...
+  </text>
+  
+  <text x="20" y="180" fill="{foreground}" font-family="monospace" font-size="14">
+    Selected colors:
+  </text>
+  
+  <text x="40" y="210" fill="{foreground}" font-family="monospace" font-size="14">
+    Accent: <tspan fill="{accent}">████████</tspan> {accent}
+  </text>
+  
+  <text x="40" y="240" fill="{foreground}" font-family="monospace" font-size="14">
+    Background: <tspan fill="{background}" stroke="{foreground}" stroke-width="0.5">████████</tspan> {background}
+  </text>
+  
+  <text x="40" y="270" fill="{foreground}" font-family="monospace" font-size="14">
+    Foreground: <tspan fill="{foreground}">████████</tspan> {foreground}
+  </text>
+  
+  <!-- Terminal Colors Display -->
+  <text x="20" y="310" fill="{foreground}" font-family="monospace" font-size="14">
+    Terminal Colors:
+  </text>
+  
+  <!-- Normal Colors -->
+  <rect x="40" y="325" width="25" height="25" fill="{black}" stroke="{foreground}" stroke-width="0.5"/>
+  <rect x="70" y="325" width="25" height="25" fill="{red}"/>
+  <rect x="100" y="325" width="25" height="25" fill="{green}"/>
+  <rect x="130" y="325" width="25" height="25" fill="{yellow}"/>
+  <rect x="160" y="325" width="25" height="25" fill="{blue}"/>
+  <rect x="190" y="325" width="25" height="25" fill="{magenta}"/>
+  <rect x="220" y="325" width="25" height="25" fill="{cyan}"/>
+  <rect x="250" y="325" width="25" height="25" fill="{white}"/>
+  
+  <!-- Bright Colors -->
+  <rect x="40" y="355" width="25" height="25" fill="{brblack}"/>
+  <rect x="70" y="355" width="25" height="25" fill="{brred}"/>
+  <rect x="100" y="355" width="25" height="25" fill="{brgreen}"/>
+  <rect x="130" y="355" width="25" height="25" fill="{bryellow}"/>
+  <rect x="160" y="355" width="25" height="25" fill="{brblue}"/>
+  <rect x="190" y="355" width="25" height="25" fill="{brmagenta}"/>
+  <rect x="220" y="355" width="25" height="25" fill="{brcyan}"/>
+  <rect x="250" y="355" width="25" height="25" fill="{brwhite}"/>
+  
+  <!-- Accent color representation in action - search highlight and selection -->
+  <rect x="350" y="325" width="400" height="55" fill="{background}" stroke="{accent}" stroke-width="2" rx="5" ry="5"/>
+  <text x="360" y="345" fill="{foreground}" font-family="monospace" font-size="14">Code with <tspan fill="{accent}">highlighted</tspan> search results</text>
+  <text x="360" y="370" fill="{foreground}" font-family="monospace" font-size="14">Selected <tspan fill="{background}" style="background:{accent}"> text with accent background </tspan> color</text>
+  
+  <!-- Command Prompt -->
+  <rect x="0" y="400" width="800" height="2" fill="{accent}" opacity="0.5"/>
+  <text x="20" y="430" fill="{foreground}" font-family="monospace" font-size="14">
+    <tspan fill="{accent}">➜</tspan>  <tspan fill="{green}">~/project</tspan> <tspan fill="{cyan}">|</tspan>
+  </text>
+  
+  <!-- Blinking cursor with accent color -->
+  <rect x="200" y="417" width="10" height="18" fill="{accent}" opacity="0.8"/>
+</svg>'''
 
 
 class ThemePreviewGenerator:

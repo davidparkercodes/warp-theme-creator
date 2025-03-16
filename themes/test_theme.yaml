@@ -1,0 +1,24 @@
+name: "Test Theme"
+accent: "#FF00FF"  # Bright pink for a cyberwave feel
+background: "#0A0A20"  # Dark blue/purple background
+foreground: "#EAEAFF"  # Light purplish white text
+details: "darker"
+terminal_colors:
+  normal:
+    black: "#100022"
+    red: "#FF2277"
+    green: "#00FFBB"
+    yellow: "#FFDD77"
+    blue: "#44AAFF"
+    magenta: "#DD00FF"
+    cyan: "#00EEFF"
+    white: "#CACAFA"
+  bright:
+    black: "#333344"
+    red: "#FF5599"
+    green: "#55FFCC"
+    yellow: "#FFEE99"
+    blue: "#77CCFF"
+    magenta: "#FF66FF"
+    cyan: "#77FFFF"
+    white: "#EEEEFF"

@@ -84,7 +84,7 @@ class TestThemePreviewGenerator(unittest.TestCase):
         # Check for replaced color values in SVG
         self.assertIn('fill="#000000"', svg_content)  # background
         self.assertIn('fill="#FFFFFF"', svg_content)  # foreground
-        self.assertIn('stroke="#FF0000"', svg_content)  # accent
+        self.assertIn('fill="#FF0000"', svg_content)  # accent
         
         # Check for terminal colors
         self.assertIn('fill="#00FF00"', svg_content)  # green
@@ -93,6 +93,10 @@ class TestThemePreviewGenerator(unittest.TestCase):
         # Check for bright colors
         self.assertIn('fill="#80FF80"', svg_content)  # bright green
         self.assertIn('fill="#8080FF"', svg_content)  # bright blue
+        
+        # Check for new Warp terminal elements
+        self.assertIn('circle cx=', svg_content)  # Window control buttons
+        self.assertIn('<tspan fill', svg_content)  # Styled text elements
 
     @patch("os.makedirs")
     @patch("builtins.open", new_callable=mock_open)

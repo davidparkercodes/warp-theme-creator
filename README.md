@@ -12,7 +12,7 @@ Warp Theme Creator is a command-line tool that creates custom themes for the [Wa
 - Generate YAML theme files compatible with Warp terminal
 - Customize theme name and output location
 - Adjust color brightness and saturation
-- Optional background image extraction (coming soon)
+- Background image extraction from websites
 
 ## Installation
 
@@ -94,15 +94,22 @@ warp-theme-creator https://example.com --output ~/warp-themes
 # Adjust color brightness and saturation
 warp-theme-creator https://example.com --brightness 1.2 --saturation 0.9
 
-# Extract background image (coming soon)
+# Extract background image
 warp-theme-creator https://example.com --extract-background
+
+# Extract background image with custom opacity
+warp-theme-creator https://example.com --extract-background --background-opacity 0.5
 ```
 
 ### Installing Themes in Warp
 
 After generating a theme, copy it to Warp's themes directory:
 ```bash
+# Copy the theme file
 cp themes/example.yaml ~/.warp/themes/
+
+# If you extracted a background image, copy it too
+cp themes/images/example_background.jpg ~/.warp/themes/
 ```
 
 Then select the theme in Warp's settings.

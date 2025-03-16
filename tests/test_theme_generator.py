@@ -68,8 +68,8 @@ class TestThemeGenerator(unittest.TestCase):
         )
         
         # Check image properties
-        self.assertEqual(theme["background_image"], "path/to/image.jpg")
-        self.assertEqual(theme["background_image_opacity"], 0.8)
+        self.assertEqual(theme["background_image"]["path"], "path/to/image.jpg")
+        self.assertEqual(theme["background_image"]["opacity"], 0.8)
 
     def test_generate_yaml(self):
         """Test YAML generation from theme dictionary."""

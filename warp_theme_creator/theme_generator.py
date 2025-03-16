@@ -80,8 +80,10 @@ class ThemeGenerator:
         
         # Add background image if provided
         if background_image:
-            theme["background_image"] = background_image
-            theme["background_image_opacity"] = opacity
+            theme["background_image"] = {
+                "path": background_image,
+                "opacity": opacity
+            }
         
         return theme
     

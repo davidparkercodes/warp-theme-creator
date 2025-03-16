@@ -15,7 +15,7 @@ Based on the Warp themes repository, we need to support:
   - [x] YAML structure with required fields
   - [x] Core colors: accent, background, foreground
   - [x] Terminal colors: 8 normal colors + 8 bright colors
-  - [ ] Optional background image with opacity setting
+  - [x] Optional background image with opacity setting
   - [ ] Support for gradient backgrounds and accents
 
 ## Implementation Checklist
@@ -68,7 +68,7 @@ Based on the Warp themes repository, we need to support:
 - [x] Add error handling and user messages
 
 ### 4. Additional Features
-- [ ] Add background image extraction option
+- [x] Add background image extraction option
 - [ ] Implement SVG preview generation
 - [ ] Add theme installation helper command
 - [ ] Create sample themes for testing

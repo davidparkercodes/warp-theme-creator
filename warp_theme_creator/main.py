@@ -6,9 +6,12 @@ This module provides the command-line interface for the tool.
 import argparse
 import os
 import sys
-from typing import List, Optional, Dict
+import shutil
+from typing import List, Optional, Dict, Tuple
 from urllib.parse import urlparse
 import re
+from io import BytesIO
+from PIL import Image
 
 from warp_theme_creator.fetcher import Fetcher
 from warp_theme_creator.color_extractor import ColorExtractor
@@ -51,6 +54,13 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         "--extract-background",
         action="store_true",
         help="Extract and use background image from website"
+    )
+    
+    parser.add_argument(
+        "--background-opacity",
+        type=float,
+        default=0.8,
+        help="Opacity value for background image (0.0 to 1.0)"
     )
     
     parser.add_argument(
@@ -142,6 +152,102 @@ def fetch_website_resources(fetcher: Fetcher, url: str, max_css: int, max_images
     resources['image_contents'] = image_contents
     
     return resources
+
+
+def extract_background_image(resources: Dict, theme_name: str, output_dir: str) -> Optional[str]:
+    """Extract and save a suitable background image from website resources.
+    
+    Args:
+        resources: Fetched website resources
+        theme_name: Name of the theme (used for filename)
+        output_dir: Directory to save the image
+        
+    Returns:
+        Path to saved background image or None if no suitable image found
+    """
+    if not resources.get('image_contents'):
+        return None
+    
+    # Create images directory if it doesn't exist
+    images_dir = os.path.join(output_dir, "images")
+    os.makedirs(images_dir, exist_ok=True)
+    
+    # Sort images by size (larger is likely better for background)
+    image_data = []
+    for image_url, image_bytes in resources.get('image_contents', {}).items():
+        try:
+            with BytesIO(image_bytes) as img_file:
+                # Validate image
+                try:
+                    with Image.open(img_file) as img:
+                        if not img.format:
+                            continue
+                        
+                        # Reset file pointer
+                        img_file.seek(0)
+                        
+                        # Calculate size and aspect ratio
+                        width, height = img.size
+                        size = width * height
+                        aspect_ratio = width / height if height > 0 else 0
+                        
+                        # Skip very small images and images with extreme aspect ratios
+                        if size < 10000 or aspect_ratio > 5 or aspect_ratio < 0.2:
+                            continue
+                        
+                        image_data.append({
+                            'url': image_url,
+                            'bytes': image_bytes,
+                            'size': size,
+                            'width': width,
+                            'height': height
+                        })
+                except Exception:
+                    continue
+        except Exception:
+            continue
+    
+    # If no valid images found
+    if not image_data:
+        return None
+    
+    # Sort by size (largest first)
+    image_data.sort(key=lambda x: x['size'], reverse=True)
+    
+    # Select the largest image
+    selected_image = image_data[0]
+    
+    # Generate filename
+    sanitized_name = ''.join(c for c in theme_name.lower() if c.isalnum() or c == '_')
+    filename = f"{sanitized_name}_background.jpg"
+    output_path = os.path.join(images_dir, filename)
+    
+    # Convert and save image as JPG (for compatibility)
+    try:
+        with BytesIO(selected_image['bytes']) as img_file:
+            with Image.open(img_file) as img:
+                # Convert to RGB mode if needed (e.g., if it's RGBA)
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                
+                # If the image is very large, resize it to a reasonable size
+                max_dimension = 1920
+                if img.width > max_dimension or img.height > max_dimension:
+                    if img.width > img.height:
+                        new_width = max_dimension
+                        new_height = int(img.height * (max_dimension / img.width))
+                    else:
+                        new_height = max_dimension
+                        new_width = int(img.width * (max_dimension / img.height))
+                    img = img.resize((new_width, new_height), Image.LANCZOS)
+                
+                # Save as JPG
+                img.save(output_path, "JPEG", quality=90)
+                return output_path
+    except Exception:
+        return None
+    
+    return None
 
 
 def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefer_light: bool = False) -> Dict[str, str]:
@@ -299,13 +405,27 @@ def main(args: Optional[List[str]] = None) -> int:
         domain = urlparse(parsed_args.url).netloc
         theme_name = domain.replace("www.", "").split(".")[0].title()
     
+    # Handle background image extraction
+    background_image_path = None
+    if parsed_args.extract_background:
+        print("Extracting background image...")
+        background_image_path = extract_background_image(
+            resources, 
+            theme_name, 
+            os.path.abspath(parsed_args.output)
+        )
+        if background_image_path:
+            print(f"Background image extracted: {os.path.basename(background_image_path)}")
+    
     # Create theme
     theme = theme_generator.create_theme(
         accent=accent_color,
         background=background_color,
         foreground=foreground_color,
         terminal_colors=terminal_colors,
-        name=theme_name
+        name=theme_name,
+        background_image=os.path.basename(background_image_path) if background_image_path else None,
+        opacity=parsed_args.background_opacity
     )
     
     # Save theme
@@ -313,7 +433,10 @@ def main(args: Optional[List[str]] = None) -> int:
     theme_path = theme_generator.save_theme(theme, output_dir)
     
     print(f"Theme generated successfully: {theme_path}")
-    print(f"Install with: cp {theme_path} ~/.warp/themes/")
+    print(f"Install with:")
+    print(f"  1. cp {theme_path} ~/.warp/themes/")
+    if background_image_path:
+        print(f"  2. cp {background_image_path} ~/.warp/themes/")
     
     return 0
 

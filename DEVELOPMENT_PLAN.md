@@ -22,7 +22,6 @@ Based on the Warp themes repository, we need to support:
 
 ### 1. Project Setup
 - [ ] Initialize Python project structure
-  - [ ] Create warp_theme_creator package directory 
   - [ ] Create setup.py and requirements.txt
   - [ ] Add __init__.py in all relevant directories
 - [ ] Set up dependencies

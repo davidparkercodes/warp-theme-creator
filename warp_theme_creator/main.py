@@ -18,6 +18,7 @@ from warp_theme_creator.color_extractor import ColorExtractor
 from warp_theme_creator.theme_generator import ThemeGenerator
 from warp_theme_creator.preview import ThemePreviewGenerator
 from warp_theme_creator.utils import adjust_color_brightness, adjust_color_saturation
+from warp_theme_creator.screenshots import ScreenshotExtractor
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
@@ -114,6 +115,18 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         "--png",
         action="store_true",
         help="Also generate PNG versions of previews"
+    )
+    
+    parser.add_argument(
+        "--use-screenshot",
+        action="store_true",
+        help="Use screenshot-based color extraction (more accurate for visual appearance)"
+    )
+    
+    parser.add_argument(
+        "--save-screenshot",
+        action="store_true",
+        help="Save the screenshot taken for color extraction"
     )
     
     return parser.parse_args(args)
@@ -487,26 +500,57 @@ def main(args: Optional[List[str]] = None) -> int:
         print("Please provide a valid URL starting with http:// or https://")
         return 1
     
-    # Fetch website resources
-    resources = fetch_website_resources(
-        fetcher, 
-        parsed_args.url, 
-        parsed_args.max_css, 
-        parsed_args.max_images
-    )
+    # Set up the output directory
+    output_dir = os.path.abspath(parsed_args.output)
+    os.makedirs(output_dir, exist_ok=True)
     
-    # Check if fetching was successful
-    if not resources.get('html'):
-        return 1
+    # Generate theme name from URL if not provided
+    theme_name = parsed_args.name
+    if theme_name is None:
+        domain = urlparse(parsed_args.url).netloc
+        theme_name = domain.replace("www.", "").split(".")[0].title()
     
-    print("Extracting colors...")
+    # Choose extraction method based on arguments
+    theme_colors = None
     
-    # Extract theme colors
-    theme_colors = extract_theme_colors(
-        color_extractor, 
-        resources, 
-        parsed_args.prefer_light
-    )
+    if parsed_args.use_screenshot:
+        print("Using screenshot-based color extraction...")
+        
+        # Directory for saving screenshots if requested
+        screenshots_dir = os.path.join(output_dir, "screenshots") if parsed_args.save_screenshot else None
+        
+        # Create screenshot extractor
+        screenshot_extractor = ScreenshotExtractor(screenshots_dir=screenshots_dir)
+        
+        # Extract colors from screenshot
+        theme_colors = screenshot_extractor.extract_theme_colors(
+            parsed_args.url,
+            prefer_light=parsed_args.prefer_light,
+            save_screenshot=parsed_args.save_screenshot
+        )
+    else:
+        # Use the traditional approach
+        # Fetch website resources
+        print("Using traditional color extraction...")
+        resources = fetch_website_resources(
+            fetcher, 
+            parsed_args.url, 
+            parsed_args.max_css, 
+            parsed_args.max_images
+        )
+        
+        # Check if fetching was successful
+        if not resources.get('html'):
+            return 1
+        
+        print("Extracting colors...")
+        
+        # Extract theme colors
+        theme_colors = extract_theme_colors(
+            color_extractor, 
+            resources, 
+            parsed_args.prefer_light
+        )
     
     # Apply brightness and saturation adjustments if needed
     if parsed_args.brightness != 1.0 or parsed_args.saturation != 1.0:
@@ -531,20 +575,22 @@ def main(args: Optional[List[str]] = None) -> int:
     # Generate terminal colors based on accent and background
     terminal_colors = color_extractor.generate_terminal_colors(accent_color, background_color)
     
-    # Generate theme name from URL if not provided
-    theme_name = parsed_args.name
-    if theme_name is None:
-        domain = urlparse(parsed_args.url).netloc
-        theme_name = domain.replace("www.", "").split(".")[0].title()
-    
-    # Handle background image extraction
+    # Handle background image extraction (only with traditional approach)
     background_image_path = None
-    if parsed_args.extract_background:
+    if parsed_args.extract_background and not parsed_args.use_screenshot:
         print("Extracting background image...")
+        # Need resources which are only available in traditional approach
+        resources = resources if 'resources' in locals() else fetch_website_resources(
+            fetcher, 
+            parsed_args.url, 
+            parsed_args.max_css, 
+            parsed_args.max_images
+        )
+        
         background_image_path = extract_background_image(
             resources, 
             theme_name, 
-            os.path.abspath(parsed_args.output)
+            output_dir
         )
         if background_image_path:
             print(f"Background image extracted: {os.path.basename(background_image_path)}")
@@ -561,7 +607,6 @@ def main(args: Optional[List[str]] = None) -> int:
     )
     
     # Save theme
-    output_dir = os.path.abspath(parsed_args.output)
     theme_path = theme_generator.save_theme(theme, output_dir)
     
     # Generate preview if requested

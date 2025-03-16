@@ -39,3 +39,8 @@ warpdotdev-themes/
 
 # Generated themes
 generated_themes/
+themes/
+
+# Test coverage
+.coverage
+htmlcov/

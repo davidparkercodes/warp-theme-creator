@@ -1,111 +1,92 @@
-# Development Plan for Warp Theme Creator
+# Implementation Checklist for Warp Theme Creator
 
 ## Project Overview
-This tool will extract colors from websites to automatically generate Warp terminal themes. The user will provide a URL, and the tool will analyze the website's color scheme to create a custom theme for the Warp terminal.
+This tool extracts colors from websites to automatically generate Warp terminal themes. The user provides a URL, and the tool analyzes the website's color scheme to create a custom theme for the Warp terminal.
 
 ## Technology Stack
 - **Language**: Python
 - **Core Functionality**: Website color extraction and theme generation
 - **Output Format**: YAML files compatible with Warp's theme system
 
-## Theme Structure Analysis
-After examining the Warp themes repository, we've identified the following key components:
+## Theme Structure Reference
+Based on the Warp themes repository, we need to support:
 
-1. **Theme Organization**:
-   - Standard themes (basic color scheme themes)
-   - Base16 themes (follow @chriskempson's base16 framework)
-   - Special edition themes (with background images)
-   - Warp bundled themes (pre-installed with Warp)
+- **Theme Format**:
+  - [x] YAML structure with required fields
+  - [x] Core colors: accent, background, foreground
+  - [x] Terminal colors: 8 normal colors + 8 bright colors
+  - [ ] Optional background image with opacity setting
+  - [ ] Support for gradient backgrounds and accents
 
-2. **Theme Format**:
-   - YAML structure with required fields
-   - Core colors: accent, background, foreground
-   - Terminal colors: 8 normal colors + 8 bright colors
-   - Optional background image with opacity setting
-   - Support for gradient backgrounds and accents
+## Implementation Checklist
 
-3. **Preview Generation**:
-   - Python script to generate SVG previews
-   - Automatically updates README files
+### 1. Project Setup
+- [ ] Initialize Python project structure
+  - [ ] Create setup.py and requirements.txt
+  - [ ] Add __init__.py in all relevant directories
+- [ ] Set up dependencies
+  - [ ] requests for HTTP fetching
+  - [ ] BeautifulSoup and cssutils for HTML/CSS parsing
+  - [ ] Pillow for image processing
+  - [ ] colorthief for color extraction
+  - [ ] PyYAML for theme file generation
 
-## Development Phases
+### 2. Core Modules Implementation
 
-### Phase 1: Setup & Research (Week 1)
-1. Initialize Python project structure
-2. Set up virtual environment and dependencies
-3. Research and select libraries for:
-   - HTTP requests (requests)
-   - HTML/CSS parsing (BeautifulSoup, cssutils)
-   - Image processing (Pillow)
-   - Color analysis (colorthief, colormath)
-   - YAML handling (PyYAML)
-4. Study color extraction techniques and algorithms
+#### Website Fetcher
+- [ ] Create fetcher.py module
+- [ ] Implement URL validation
+- [ ] Implement HTML content fetching
+- [ ] Add error handling for network issues
+- [ ] Add support for css file fetching
+- [ ] Add support for image fetching
 
-### Phase 2: Core Functionality (Weeks 2-3)
-1. Implement website fetching module
-   - Handle different URL formats
-   - Manage network errors and timeouts
-   - Support authentication if needed
-2. Create color extraction module
-   - Extract dominant colors from website
-   - Identify background, foreground, and accent colors
-   - Generate complementary terminal colors
-   - Support different extraction strategies (CSS, images, or both)
-3. Implement theme generation module
-   - Convert extracted colors to Warp theme format
-   - Generate YAML output
-   - Validate against Warp theme schema
+#### Color Extractor
+- [ ] Create color_extractor.py module
+- [ ] Extract colors from CSS (background, text colors)
+- [ ] Extract colors from images (dominant colors)
+- [ ] Algorithm to select accent color
+- [ ] Algorithm to generate complementary terminal colors
+- [ ] Color utility functions (brightness, contrast, etc.)
 
-### Phase 3: User Experience (Week 4)
-1. Develop CLI interface with argparse or click
-   - URL input
-   - Theme customization options
-   - Output location configuration
-2. Add configuration options
-   - Color adjustment (brightness, saturation)
-   - Background image extraction and processing
-   - Theme naming and metadata
-3. Implement preview generation
-   - Leverage existing Warp SVG preview generation
-   - Provide terminal command to install the theme
+#### Theme Generator
+- [ ] Create theme_generator.py module
+- [ ] Implement theme template structure
+- [ ] Create method to map extracted colors to theme format
+- [ ] Add YAML output generation
+- [ ] Add theme validation
 
-### Phase 4: Testing & Validation (Week 5)
-1. Unit tests with pytest
-2. Integration tests with sample websites
-3. Validation tests with Warp terminal
-4. Performance testing and optimization
+### 3. CLI Interface
+- [ ] Create main.py with command-line interface
+- [ ] Implement URL argument handling
+- [ ] Add theme customization options
+  - [ ] Theme name setting
+  - [ ] Output path setting
+  - [ ] Color adjustment options
+- [ ] Add progress feedback
+- [ ] Add error handling and user messages
 
-### Phase 5: Documentation & Distribution (Week 6)
-1. Create comprehensive documentation
-   - Installation instructions
-   - Usage examples
-   - Configuration options
-2. Add sample themes and previews
-3. Package for distribution
-   - PyPI package
-   - Binary releases with PyInstaller
-4. Create contribution guidelines
+### 4. Additional Features
+- [ ] Add background image extraction option
+- [ ] Implement SVG preview generation
+- [ ] Add theme installation helper command
+- [ ] Create sample themes for testing
 
-## Features Roadmap
+### 5. Testing and Validation
+- [ ] Create basic test framework
+- [ ] Write tests for URL fetching
+- [ ] Write tests for color extraction
+- [ ] Write tests for theme generation
+- [ ] Test with various websites (dark, light, colorful)
 
-### MVP (Minimum Viable Product)
-- Extract colors from a website URL
-- Generate a basic Warp theme YAML file
-- CLI interface for basic operations
+### 6. Documentation and Finishing
+- [ ] Update README with detailed usage examples
+- [ ] Add documentation for customization options
+- [ ] Create example themes and previews
+- [ ] Ensure all code has docstrings and type hints
+- [ ] Final code cleanup and formatting
 
-### Version 1.0
-- Extract colors from both CSS and images
-- Support custom color adjustments
-- Include background image extraction
-- Generate SVG previews
-
-### Future Enhancements
-- GUI interface
-- Integration with Warp as a plugin
-- Theme sharing platform
-- AI-enhanced color harmony
-
-## Architecture
+## File Structure
 
 ```
 warp-theme-creator/
@@ -117,17 +98,19 @@ warp-theme-creator/
 │   ├── theme_generator.py   # Theme YAML generation
 │   ├── preview.py           # Preview generation
 │   └── utils.py             # Helper functions
-├── tests/                   # Test suite
+├── tests/
+│   ├── __init__.py 
+│   ├── test_fetcher.py
+│   ├── test_color_extractor.py
+│   └── test_theme_generator.py
 ├── examples/                # Example themes
-├── docs/                    # Documentation
 ├── setup.py                 # Package setup
 └── requirements.txt         # Dependencies
 ```
 
-## Development Approach
-We'll follow the Python best practices outlined in UPDATE_RULES.md:
-- TDD approach with tests written first
+## Implementation Approach
+We'll follow Python best practices from UPDATE_RULES.md:
+- Type hints throughout the codebase
+- Error handling with specific exception types
 - Pure functions where possible
-- Proper error handling with try/except
-- Use type hints for better code clarity
-- Regular code quality checks with black, flake8, and mypy
+- Modular design with single-responsibility principle

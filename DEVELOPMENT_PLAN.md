@@ -69,7 +69,7 @@ Based on the Warp themes repository, we need to support:
 
 ### 4. Additional Features
 - [x] Add background image extraction option
-- [ ] Implement SVG preview generation
+- [x] Implement SVG preview generation
 - [ ] Add theme installation helper command
 - [ ] Create sample themes for testing
 
@@ -97,7 +97,7 @@ warp-theme-creator/
 │   ├── fetcher.py           # Website content fetching
 │   ├── color_extractor.py   # Color extraction logic
 │   ├── theme_generator.py   # Theme YAML generation
-│   ├── preview.py           # Preview generation (to be added)
+│   ├── preview.py           # SVG preview generation
 │   └── utils.py             # Helper functions
 ├── tests/
 │   ├── __init__.py 

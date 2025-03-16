@@ -1,45 +1,71 @@
-#!/usr/bin/env python3
-"""Test script for the enhanced SVG preview generator."""
+#\!/usr/bin/env python
+"""
+Debug script to test the enhanced preview generation with PNG output.
+
+Usage:
+  python test_enhanced_preview.py [--png]
+"""
 
 import os
 import sys
 import yaml
+from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add the parent directory to the path so we can import from the package
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from warp_theme_creator.preview import ThemePreviewGenerator
 
-
-def test_enhanced_preview():
-    """Test the enhanced SVG preview generator with an existing theme."""
-    # Locate the themes directory
-    themes_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "themes")
+def main():
+    """Main function to generate and test the preview."""
+    # Parse command line arguments
+    generate_png = "--png" in sys.argv
     
-    # Find the first theme file
-    theme_files = [f for f in os.listdir(themes_dir) 
-                   if f.endswith(('.yaml', '.yml')) and os.path.isfile(os.path.join(themes_dir, f))]
+    # Find themes directory
+    repo_root = Path(__file__).parent.parent
+    themes_dir = repo_root / "themes"
     
-    if not theme_files:
-        print("No theme files found in themes directory.")
+    # Ensure themes directory exists
+    if not themes_dir.exists():
+        print(f"Error: Themes directory not found at {themes_dir}")
         return 1
     
-    theme_file = theme_files[0]
-    theme_path = os.path.join(themes_dir, theme_file)
+    # Look for test_theme.yaml or any other theme file
+    theme_file = themes_dir / "test_theme.yaml"
+    if not theme_file.exists():
+        # Find any theme file if test_theme.yaml doesn't exist
+        theme_files = list(themes_dir.glob("*.yaml"))
+        if not theme_files:
+            print(f"Error: No theme files found in {themes_dir}")
+            return 1
+        theme_file = theme_files[0]
     
-    print(f"Testing enhanced preview generator with theme: {theme_file}")
-    
-    # Load the theme
-    with open(theme_path, 'r') as f:
+    # Load theme file
+    with open(theme_file, 'r') as f:
         theme = yaml.safe_load(f)
     
-    # Generate the preview
-    preview_generator = ThemePreviewGenerator()
-    output_path = preview_generator.save_preview(theme, themes_dir)
+    # Print info about the theme
+    print(f"Generating preview for theme: {theme.get('name', 'Unknown')}")
+    print(f"Accent color: {theme.get('accent', 'Unknown')}")
+    print(f"Background: {theme.get('background', 'Unknown')}")
+    print(f"Foreground: {theme.get('foreground', 'Unknown')}")
     
-    print(f"Preview generated: {output_path}")
+    # Generate preview
+    preview_generator = ThemePreviewGenerator()
+    
+    output_dir = repo_root / "themes"
+    
+    # Save previews
+    svg_path, png_path = preview_generator.save_previews(theme, output_dir, generate_png=generate_png)
+    
+    # Print results
+    print(f"\nSVG preview generated at: {svg_path}")
+    if generate_png and png_path:
+        print(f"PNG preview generated at: {png_path}")
+    elif generate_png and not png_path:
+        print("PNG generation failed. Make sure cairosvg is installed.")
+    
     return 0
 
-
 if __name__ == "__main__":
-    sys.exit(test_enhanced_preview())
+    sys.exit(main())

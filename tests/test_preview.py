@@ -100,8 +100,55 @@ class TestThemePreviewGenerator(unittest.TestCase):
 
     @patch("os.makedirs")
     @patch("builtins.open", new_callable=mock_open)
-    def test_save_preview(self, mock_file, mock_makedirs):
-        """Test that preview is saved correctly."""
+    def test_save_previews(self, mock_file, mock_makedirs):
+        """Test that previews are saved correctly."""
+        # Test SVG only
+        svg_path, png_path = self.preview_generator.save_previews(self.sample_theme, "/fake/path", generate_png=False)
+        
+        # Check that directories are created
+        mock_makedirs.assert_called_with("/fake/path/previews", exist_ok=True)
+        
+        # Check that the SVG file is opened for writing
+        mock_file.assert_called_with("/fake/path/previews/testtheme_preview.svg", "w")
+        
+        # Check SVG content is written
+        file_handle = mock_file()
+        self.assertTrue(file_handle.write.called)
+        
+        # Check that the returned paths are correct
+        self.assertEqual(svg_path, "/fake/path/previews/testtheme_preview.svg")
+        self.assertIsNone(png_path)
+
+    @patch("warp_theme_creator.preview.CAIROSVG_AVAILABLE", True)
+    @patch("warp_theme_creator.preview.cairosvg.svg2png", return_value=b"PNG_DATA")
+    @patch("os.makedirs")
+    @patch("builtins.open", new_callable=mock_open)
+    def test_save_previews_with_png(self, mock_file, mock_makedirs, mock_svg2png):
+        """Test that both SVG and PNG previews are saved correctly."""
+        svg_path, png_path = self.preview_generator.save_previews(self.sample_theme, "/fake/path", generate_png=True)
+        
+        # Check that directories are created
+        mock_makedirs.assert_called_with("/fake/path/previews", exist_ok=True)
+        
+        # Check that both files are opened for writing
+        mock_file.assert_any_call("/fake/path/previews/testtheme_preview.svg", "w")
+        mock_file.assert_any_call("/fake/path/previews/testtheme_preview.png", "wb")
+        
+        # Check that content is written to both files
+        file_handle = mock_file()
+        self.assertTrue(file_handle.write.called)
+        
+        # Check that cairosvg was called
+        self.assertTrue(mock_svg2png.called)
+        
+        # Check that the returned paths are correct
+        self.assertEqual(svg_path, "/fake/path/previews/testtheme_preview.svg")
+        self.assertEqual(png_path, "/fake/path/previews/testtheme_preview.png")
+        
+    @patch("os.makedirs")
+    @patch("builtins.open", new_callable=mock_open)
+    def test_save_preview_backward_compatibility(self, mock_file, mock_makedirs):
+        """Test that the original save_preview method works for backward compatibility."""
         output_path = self.preview_generator.save_preview(self.sample_theme, "/fake/path")
         
         # Check that directories are created
@@ -110,7 +157,7 @@ class TestThemePreviewGenerator(unittest.TestCase):
         # Check that the file is opened for writing
         mock_file.assert_called_with("/fake/path/previews/testtheme_preview.svg", "w")
         
-        # Check SVG content is written
+        # Check content is written
         file_handle = mock_file()
         self.assertTrue(file_handle.write.called)
         
@@ -131,25 +178,64 @@ class TestThemePreviewGenerator(unittest.TestCase):
                       "blue": "#8080FF", "magenta": "#FF80FF", "cyan": "#80FFFF", "white": "#FFFFFF"}
         }
     }))
-    @patch("warp_theme_creator.preview.ThemePreviewGenerator.save_preview")
-    def test_generate_previews_for_directory(self, mock_save_preview, mock_open_file, mock_listdir, mock_isfile):
+    @patch("warp_theme_creator.preview.ThemePreviewGenerator.save_previews")
+    def test_generate_previews_for_directory(self, mock_save_previews, mock_open_file, mock_listdir, mock_isfile):
         """Test generating previews for all themes in a directory."""
         # Set up mock to return different paths for different themes
-        mock_save_preview.side_effect = [
-            "/fake/path/previews/theme1_preview.svg",
-            "/fake/path/previews/theme2_preview.svg"
+        mock_save_previews.side_effect = [
+            ("/fake/path/previews/theme1_preview.svg", None),
+            ("/fake/path/previews/theme2_preview.svg", None)
         ]
         
-        # Generate previews
-        preview_paths = self.preview_generator.generate_previews_for_directory("/fake/path")
+        # Generate previews (SVG only)
+        preview_paths = self.preview_generator.generate_previews_for_directory("/fake/path", generate_png=False)
         
-        # Check that save_preview was called twice (once for each theme)
-        self.assertEqual(mock_save_preview.call_count, 2)
+        # Check that save_previews was called twice (once for each theme)
+        self.assertEqual(mock_save_previews.call_count, 2)
         
         # Check that the function returns the correct paths
         self.assertEqual(len(preview_paths), 2)
-        self.assertEqual(preview_paths[0], "/fake/path/previews/theme1_preview.svg")
-        self.assertEqual(preview_paths[1], "/fake/path/previews/theme2_preview.svg")
+        self.assertEqual(preview_paths[0][0], "/fake/path/previews/theme1_preview.svg")
+        self.assertEqual(preview_paths[1][0], "/fake/path/previews/theme2_preview.svg")
+        self.assertIsNone(preview_paths[0][1])  # No PNG path
+        self.assertIsNone(preview_paths[1][1])  # No PNG path
+        
+    @patch("warp_theme_creator.preview.CAIROSVG_AVAILABLE", True)
+    @patch("os.path.isfile", return_value=True)
+    @patch("os.listdir", return_value=["theme1.yaml", "theme2.yml", "not_a_theme.txt"])
+    @patch("builtins.open", new_callable=mock_open, read_data=yaml.dump({
+        "name": "Theme1",
+        "accent": "#FF0000",
+        "background": "#000000",
+        "foreground": "#FFFFFF",
+        "terminal_colors": {
+            "normal": {"black": "#000000", "red": "#FF0000", "green": "#00FF00", "yellow": "#FFFF00",
+                       "blue": "#0000FF", "magenta": "#FF00FF", "cyan": "#00FFFF", "white": "#FFFFFF"},
+            "bright": {"black": "#808080", "red": "#FF8080", "green": "#80FF80", "yellow": "#FFFF80",
+                      "blue": "#8080FF", "magenta": "#FF80FF", "cyan": "#80FFFF", "white": "#FFFFFF"}
+        }
+    }))
+    @patch("warp_theme_creator.preview.ThemePreviewGenerator.save_previews")
+    def test_generate_previews_for_directory_with_png(self, mock_save_previews, mock_open_file, mock_listdir, mock_isfile):
+        """Test generating both SVG and PNG previews for all themes in a directory."""
+        # Set up mock to return different paths for different themes
+        mock_save_previews.side_effect = [
+            ("/fake/path/previews/theme1_preview.svg", "/fake/path/previews/theme1_preview.png"),
+            ("/fake/path/previews/theme2_preview.svg", "/fake/path/previews/theme2_preview.png")
+        ]
+        
+        # Generate previews (SVG and PNG)
+        preview_paths = self.preview_generator.generate_previews_for_directory("/fake/path", generate_png=True)
+        
+        # Check that save_previews was called twice (once for each theme)
+        self.assertEqual(mock_save_previews.call_count, 2)
+        
+        # Check that the function returns the correct paths
+        self.assertEqual(len(preview_paths), 2)
+        self.assertEqual(preview_paths[0][0], "/fake/path/previews/theme1_preview.svg")
+        self.assertEqual(preview_paths[0][1], "/fake/path/previews/theme1_preview.png")
+        self.assertEqual(preview_paths[1][0], "/fake/path/previews/theme2_preview.svg")
+        self.assertEqual(preview_paths[1][1], "/fake/path/previews/theme2_preview.png")
 
 
 if __name__ == "__main__":

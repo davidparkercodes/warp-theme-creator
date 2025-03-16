@@ -110,6 +110,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Generate SVG previews for all themes in the output directory"
     )
     
+    parser.add_argument(
+        "--png",
+        action="store_true",
+        help="Also generate PNG versions of previews"
+    )
+    
     return parser.parse_args(args)
 
 
@@ -446,27 +452,42 @@ def main(args: Optional[List[str]] = None) -> int:
     theme_path = theme_generator.save_theme(theme, output_dir)
     
     # Generate preview if requested
-    preview_path = None
+    preview_paths = None
     if parsed_args.generate_preview:
-        print("Generating SVG preview...")
+        print(f"Generating {'SVG and PNG' if parsed_args.png else 'SVG'} preview...")
         preview_generator = ThemePreviewGenerator()
-        preview_path = preview_generator.save_preview(theme, output_dir)
-        print(f"Preview generated: {preview_path}")
+        svg_path, png_path = preview_generator.save_previews(theme, output_dir, generate_png=parsed_args.png)
+        preview_paths = (svg_path, png_path)
+        print(f"Preview generated: {svg_path}")
+        if png_path:
+            print(f"PNG preview generated: {png_path}")
     
     # Generate all previews if requested
     if parsed_args.generate_all_previews:
-        print("Generating previews for all themes...")
+        print(f"Generating {'SVG and PNG' if parsed_args.png else 'SVG'} previews for all themes...")
         preview_generator = ThemePreviewGenerator()
-        preview_paths = preview_generator.generate_previews_for_directory(output_dir)
-        print(f"Generated {len(preview_paths)} previews in {os.path.join(output_dir, 'previews')}")
+        preview_paths_list = preview_generator.generate_previews_for_directory(
+            output_dir, 
+            generate_png=parsed_args.png
+        )
+        svg_count = len(preview_paths_list)
+        png_count = sum(1 for _, png_path in preview_paths_list if png_path)
+        
+        if parsed_args.png:
+            print(f"Generated {svg_count} SVG and {png_count} PNG previews in {os.path.join(output_dir, 'previews')}")
+        else:
+            print(f"Generated {svg_count} SVG previews in {os.path.join(output_dir, 'previews')}")
     
     print(f"Theme generated successfully: {theme_path}")
     print(f"Install with:")
     print(f"  1. cp {theme_path} ~/.warp/themes/")
     if background_image_path:
         print(f"  2. cp {background_image_path} ~/.warp/themes/")
-    if preview_path:
-        print(f"View preview: {preview_path}")
+    if preview_paths:
+        svg_path, png_path = preview_paths
+        print(f"View SVG preview: {svg_path}")
+        if png_path:
+            print(f"View PNG preview: {png_path}")
     
     return 0
 

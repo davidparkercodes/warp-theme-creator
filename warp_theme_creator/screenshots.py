@@ -149,10 +149,10 @@ class ScreenshotExtractor:
     def extract_colors_from_image(
         self, 
         image: Image.Image, 
-        n_colors: int = 8, 
-        exclude_whites: bool = True,
+        n_colors: int = 12,  # Increased to get more colors
+        exclude_whites: bool = False,  # Changed to False - we want to keep whites for background detection
         exclude_blacks: bool = True,
-        min_saturation: float = 0.05,
+        min_saturation: float = 0.0,   # Changed to 0.0 to allow more colors including whites
     ) -> List[Tuple[str, float]]:
         """
         Extract dominant colors from an image using K-means clustering.
@@ -234,6 +234,12 @@ class ScreenshotExtractor:
         Returns:
             True if the color appears frequently on the edges
         """
+        # Special case for common background colors
+        # If color is very light (near white), we consider it a potential background
+        brightness = self.get_color_brightness(color)
+        if brightness > 240:  # Very close to white
+            return True
+        
         # Convert hex to RGB
         hex_color = color.lstrip('#')
         target_rgb = (
@@ -273,8 +279,9 @@ class ScreenshotExtractor:
             if distance < tolerance:
                 matches += 1
                 
-        # If more than 40% of edge pixels match, it's likely a background color
-        return matches / len(edge_pixels) > 0.4
+        # If more than 25% of edge pixels match, it's likely a background color
+        # Lowered from 40% to 25% to be more permissive
+        return matches / len(edge_pixels) > 0.25
         
     def select_colors_for_theme(
         self, 

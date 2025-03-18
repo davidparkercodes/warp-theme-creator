@@ -24,6 +24,7 @@ class TestMain(unittest.TestCase):
                     "extract_background": False,
                     "brightness": 1.0,
                     "saturation": 1.0,
+                    "generate_preview": True,
                 }
             ),
             # With theme name
@@ -36,6 +37,7 @@ class TestMain(unittest.TestCase):
                     "extract_background": False,
                     "brightness": 1.0,
                     "saturation": 1.0,
+                    "generate_preview": True,
                 }
             ),
             # With output directory
@@ -48,6 +50,7 @@ class TestMain(unittest.TestCase):
                     "extract_background": False,
                     "brightness": 1.0,
                     "saturation": 1.0,
+                    "generate_preview": True,
                 }
             ),
             # With background extraction
@@ -60,6 +63,7 @@ class TestMain(unittest.TestCase):
                     "extract_background": True,
                     "brightness": 1.0,
                     "saturation": 1.0,
+                    "generate_preview": True,
                 }
             ),
             # With adjustment factors
@@ -72,6 +76,20 @@ class TestMain(unittest.TestCase):
                     "extract_background": False,
                     "brightness": 1.2,
                     "saturation": 0.8,
+                    "generate_preview": True,
+                }
+            ),
+            # With generate-preview disabled
+            (
+                ["https://example.com", "--no-generate-preview"],
+                {
+                    "url": "https://example.com",
+                    "name": None,
+                    "output": "./themes",
+                    "extract_background": False,
+                    "brightness": 1.0,
+                    "saturation": 1.0,
+                    "generate_preview": False,
                 }
             ),
         ]
@@ -85,7 +103,8 @@ class TestMain(unittest.TestCase):
     @mock.patch('warp_theme_creator.main.Fetcher')
     @mock.patch('warp_theme_creator.main.ColorExtractor')
     @mock.patch('warp_theme_creator.main.ThemeGenerator')
-    def test_main_success(self, mock_theme_generator, mock_color_extractor, mock_fetcher):
+    @mock.patch('warp_theme_creator.main.ThemePreviewGenerator')
+    def test_main_success(self, mock_theme_preview_generator, mock_theme_generator, mock_color_extractor, mock_fetcher):
         """Test successful execution of main function."""
         # Setup mocks
         mock_fetcher_instance = mock.MagicMock()
@@ -135,6 +154,11 @@ class TestMain(unittest.TestCase):
         mock_theme_generator_instance.create_theme.return_value = {"name": "Test Theme"}
         mock_theme_generator_instance.save_theme.return_value = "/tmp/test_theme.yaml"
         
+        # Setup preview generator mock
+        mock_preview_instance = mock.MagicMock()
+        mock_theme_preview_generator.return_value = mock_preview_instance
+        mock_preview_instance.save_previews.return_value = ("/tmp/preview.svg", None)
+        
         # Create a temporary directory for output
         with tempfile.TemporaryDirectory() as temp_dir:
             # Run main with test arguments
@@ -149,6 +173,9 @@ class TestMain(unittest.TestCase):
             mock_color_extractor_instance.generate_terminal_colors.assert_called_once()
             mock_theme_generator_instance.create_theme.assert_called_once()
             mock_theme_generator_instance.save_theme.assert_called_once()
+            # Verify preview generation is called by default
+            mock_theme_preview_generator.assert_called_once()
+            mock_preview_instance.save_previews.assert_called_once()
 
     @mock.patch('warp_theme_creator.main.Fetcher')
     def test_main_fetch_error(self, mock_fetcher):

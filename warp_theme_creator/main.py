@@ -99,10 +99,18 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Maximum number of images to analyze"
     )
     
-    parser.add_argument(
+    preview_group = parser.add_mutually_exclusive_group()
+    preview_group.add_argument(
         "--generate-preview",
         action="store_true",
-        help="Generate SVG preview of the theme"
+        default=True,
+        help="Generate SVG preview of the theme (enabled by default)"
+    )
+    preview_group.add_argument(
+        "--no-generate-preview",
+        action="store_false",
+        dest="generate_preview",
+        help="Disable SVG preview generation"
     )
     
     parser.add_argument(
@@ -609,7 +617,7 @@ def main(args: Optional[List[str]] = None) -> int:
     # Save theme
     theme_path = theme_generator.save_theme(theme, output_dir)
     
-    # Generate preview if requested
+    # Generate preview (enabled by default)
     preview_paths = None
     if parsed_args.generate_preview:
         print(f"Generating {'SVG and PNG' if parsed_args.png else 'SVG'} preview...")

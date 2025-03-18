@@ -307,6 +307,20 @@ class ScreenshotExtractor:
                 'foreground': '#FFFFFF' if not prefer_light else '#1E1E1E',
                 'accent': '#0087D7'
             }
+        
+        # Debug all colors first
+        print("\nAnalyzing colors for accent selection:")
+        for color, percentage in dominant_colors:
+            hex_color = color.lstrip('#')
+            if len(hex_color) == 6:
+                r = int(hex_color[0:2], 16)
+                g = int(hex_color[2:4], 16)
+                b = int(hex_color[4:6], 16)
+                print(f"  Color {color}: RGB({r},{g},{b}) - Percentage: {percentage:.2%}")
+                
+                # Check if this might be a good red accent
+                if r > 150 and g < 100 and b < 100:
+                    print(f"  *** Potential red accent detected: {color}")
             
         # Separate colors into potential backgrounds and accents
         potential_backgrounds = []
@@ -362,7 +376,19 @@ class ScreenshotExtractor:
         # For Redkey.io, we want to prioritize the red accent color if present
         redkey_accent = None
         
+        print("\nPotential accent colors:")
         for color, _, is_light in potential_accents:
+            # Convert hex to RGB for analysis
+            color_hex = color.lstrip('#')
+            if len(color_hex) != 6:
+                continue
+                
+            r = int(color_hex[0:2], 16)
+            g = int(color_hex[2:4], 16)
+            b = int(color_hex[4:6], 16)
+            
+            print(f"  Analyzing {color}: RGB({r},{g},{b})")
+            
             # Skip colors that are too similar to the background
             bg_hex = background.lstrip('#')
             bg_rgb = (
@@ -371,36 +397,38 @@ class ScreenshotExtractor:
                 int(bg_hex[4:6], 16)
             )
             
-            color_hex = color.lstrip('#')
-            color_rgb = (
-                int(color_hex[0:2], 16),
-                int(color_hex[2:4], 16),
-                int(color_hex[4:6], 16)
-            )
+            color_rgb = (r, g, b)
             
             # Check for Redkey.io red accent
-            r, g, b = color_rgb
             if r > 150 and g < 100 and b < 100:  # Red-ish color (more permissive)
                 redkey_accent = color
-                print(f"Found potential red accent: {color} - RGB: {r},{g},{b}")
+                print(f"  ✓ Found potential red accent: {color} - RGB: {r},{g},{b}")
             
-            if self.get_color_distance(bg_rgb, color_rgb) < 50:
+            distance = self.get_color_distance(bg_rgb, color_rgb)
+            if distance < 50:
+                print(f"  ✘ Too similar to background (distance: {distance:.1f})")
                 continue
+            else:
+                print(f"  ✓ Good contrast with background (distance: {distance:.1f})")
                 
             # Prefer colors that have the same brightness character as the foreground
             if (is_light and fg_is_light) or (not is_light and not fg_is_light):
                 accent = color
+                print(f"  ✓ Selected as accent: {color}")
                 break
         
         # If we found the Redkey red, use it
         if redkey_accent:
             accent = redkey_accent
+            print(f"\nOverriding with red accent color: {accent}")
         # If no suitable accent found, pick the first non-background color
         elif not accent and potential_accents:
             accent = potential_accents[0][0]
+            print(f"\nUsing first available accent color: {accent}")
         else:
             # Fallback accent color
-            accent = '#0087D7'
+            accent = '#C6262E' if '#C6262E' in [c[0] for c in dominant_colors] else '#0087D7'
+            print(f"\nUsing fallback accent color: {accent}")
             
         return {
             'background': background,

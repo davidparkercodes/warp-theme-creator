@@ -9,3 +9,7 @@ black>=22.0.0
 flake8>=5.0.0
 mypy>=0.900
 cairosvg>=2.7.0
+selenium>=4.1.0
+webdriver-manager>=3.8.0
+scikit-learn>=1.0.0
+numpy>=1.20.0

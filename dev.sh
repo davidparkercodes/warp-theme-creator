@@ -25,12 +25,14 @@ if [ $# -eq 0 ]; then
     echo -e "Usage: ./dev.sh [command]"
     echo -e ""
     echo -e "Available commands:"
-    echo -e "  ${GREEN}test${NC}        - Run all tests"
-    echo -e "  ${GREEN}lint${NC}        - Run code linting and formatting checks"
-    echo -e "  ${GREEN}format${NC}      - Format code with black"
-    echo -e "  ${GREEN}coverage${NC}    - Run tests with coverage report"
-    echo -e "  ${GREEN}clean${NC}       - Clean up cache and build files"
-    echo -e "  ${GREEN}run${NC} [url]   - Run the tool with the specified URL (default: example.com)"
+    echo -e "  ${GREEN}test${NC}             - Run all tests"
+    echo -e "  ${GREEN}lint${NC}             - Run code linting and formatting checks"
+    echo -e "  ${GREEN}format${NC}           - Format code with black"
+    echo -e "  ${GREEN}coverage${NC}         - Run tests with coverage report"
+    echo -e "  ${GREEN}clean${NC}            - Clean up cache and build files"
+    echo -e "  ${GREEN}run${NC} [url]        - Run the tool with the specified URL (default: example.com)"
+    echo -e "  ${GREEN}screenshot${NC} [url] - Run with screenshot-based extraction (default: example.com)"
+    echo -e "  ${GREEN}install-deps${NC}     - Install/update dependencies from requirements.txt"
     exit 0
 fi
 
@@ -70,6 +72,18 @@ case $command in
         echo -e "${BLUE}Running warp-theme-creator with URL: ${url} $@${NC}"
         python -m warp_theme_creator.main "${url}" "$@"
         echo -e "${GREEN}Theme generated in themes/ directory.${NC}"
+        ;;
+    screenshot)
+        url=${1:-"https://example.com"}
+        shift # Remove the URL from the argument list
+        echo -e "${BLUE}Running warp-theme-creator with screenshot-based extraction for URL: ${url} $@${NC}"
+        python -m warp_theme_creator.main "${url}" --use-screenshot --save-screenshot "$@"
+        echo -e "${GREEN}Theme generated in themes/ directory.${NC}"
+        ;;
+    install-deps)
+        echo -e "${BLUE}Installing dependencies from requirements.txt...${NC}"
+        pip install -r requirements.txt
+        echo -e "${GREEN}Dependencies installed.${NC}"
         ;;
     *)
         echo -e "${RED}Unknown command: ${command}${NC}"

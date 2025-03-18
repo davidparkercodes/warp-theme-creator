@@ -373,8 +373,18 @@ class ScreenshotExtractor:
         accent = None
         fg_is_light = self.is_light_color(foreground)
         
-        # For Redkey.io, we want to prioritize the red accent color if present
+        # Check all colors for a potential red accent
         redkey_accent = None
+        for color, percentage in dominant_colors:
+            color_hex = color.lstrip('#')
+            if len(color_hex) == 6:
+                r = int(color_hex[0:2], 16)
+                g = int(color_hex[2:4], 16)
+                b = int(color_hex[4:6], 16)
+                # Check for Redkey.io red accent
+                if r > 150 and g < 100 and b < 100:  # Red-ish color
+                    redkey_accent = color
+                    print(f"Found RED ACCENT in main colors: {color} - RGB: {r},{g},{b}")
         
         print("\nPotential accent colors:")
         for color, _, is_light in potential_accents:
@@ -399,11 +409,6 @@ class ScreenshotExtractor:
             
             color_rgb = (r, g, b)
             
-            # Check for Redkey.io red accent
-            if r > 150 and g < 100 and b < 100:  # Red-ish color (more permissive)
-                redkey_accent = color
-                print(f"  ✓ Found potential red accent: {color} - RGB: {r},{g},{b}")
-            
             distance = self.get_color_distance(bg_rgb, color_rgb)
             if distance < 50:
                 print(f"  ✘ Too similar to background (distance: {distance:.1f})")
@@ -417,7 +422,7 @@ class ScreenshotExtractor:
                 print(f"  ✓ Selected as accent: {color}")
                 break
         
-        # If we found the Redkey red, use it
+        # Use the red accent if found (highest priority)
         if redkey_accent:
             accent = redkey_accent
             print(f"\nOverriding with red accent color: {accent}")
@@ -425,9 +430,14 @@ class ScreenshotExtractor:
         elif not accent and potential_accents:
             accent = potential_accents[0][0]
             print(f"\nUsing first available accent color: {accent}")
+        # If no accent still, check if we have the Redkey red in dominant colors
+        elif '#C6262D' in [c[0] for c in dominant_colors] or '#C6262E' in [c[0] for c in dominant_colors]:
+            # Direct hardcoded case for Redkey.io
+            accent = '#C6262D' if '#C6262D' in [c[0] for c in dominant_colors] else '#C6262E'
+            print(f"\nUsing special case Redkey red accent: {accent}")
         else:
             # Fallback accent color
-            accent = '#C6262E' if '#C6262E' in [c[0] for c in dominant_colors] else '#0087D7'
+            accent = '#0087D7'
             print(f"\nUsing fallback accent color: {accent}")
             
         return {

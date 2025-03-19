@@ -23,7 +23,7 @@
   
   <!-- Window Controls Bar -->
   <rect x="0" y="0" width="1000" height="30" fill="#111111" rx="10" ry="10"/>
-  <text x="20" y="20" fill="#FFFFFF" font-family="monospace" font-size="14">Warp Terminal - Matrix</text>
+  <text x="20" y="20" fill="#00FF00" font-family="monospace" font-size="14">Warp Terminal - Matrix</text>
   <circle cx="950" cy="15" r="7" fill="#FF5F56"/>
   <circle cx="925" cy="15" r="7" fill="#FFBD2E"/>
   <circle cx="900" cy="15" r="7" fill="#27C93F"/>
@@ -33,7 +33,7 @@
   
   <!-- Top Command with accent color in prompt -->
   <text x="20" y="55" fill="#00FF00" font-family="monospace" font-size="14">
-    <tspan fill="#00FF00">➜</tspan>  <tspan fill="#00FF00">~/projects</tspan> <tspan fill="#00FF7F">git:(</tspan><tspan fill="#FF0000">feature/enhanced-previews</tspan><tspan fill="#00FF7F">)</tspan> 
+    <tspan fill="#00FF00">➜</tspan>  <tspan fill="#00FF00">~/projects</tspan> <tspan fill="#00DD00">git:(</tspan><tspan fill="#00BB00">feature/enhanced-previews</tspan><tspan fill="#00DD00">)</tspan> 
   </text>
   
   <!-- Standard Command Execution Section -->
@@ -41,11 +41,11 @@
     $ warp-theme-creator https://example.com --generate-preview --all-colors
   </text>
   
-  <text x="20" y="105" fill="#7F007F" font-family="monospace" font-size="14">
+  <text x="20" y="105" fill="#00CC00" font-family="monospace" font-size="14">
     Fetching HTML content from https://example.com...
   </text>
   
-  <text x="20" y="130" fill="#7F007F" font-family="monospace" font-size="14">
+  <text x="20" y="130" fill="#00CC00" font-family="monospace" font-size="14">
     Extracting colors...
   </text>
 
@@ -55,17 +55,17 @@
   </text>
   
   <!-- Warning Message Example -->
-  <text x="20" y="180" fill="#7FFF00" font-family="monospace" font-size="14">
+  <text x="20" y="180" fill="#00DD00" font-family="monospace" font-size="14">
     ⚠ Warning: Some images could not be processed, using default fallbacks.
   </text>
 
   <!-- Error Message Example -->
-  <text x="20" y="205" fill="#7F0000" font-family="monospace" font-size="14">
+  <text x="20" y="205" fill="#00AA00" font-family="monospace" font-size="14">
     ✗ Error: Unable to extract background image. Using solid background instead.
   </text>
 
   <!-- Debug Message Example -->
-  <text x="20" y="230" fill="#00FFFF" font-family="monospace" font-size="14">
+  <text x="20" y="230" fill="#00EE00" font-family="monospace" font-size="14">
     [DEBUG] Processing 5 CSS files and 3 images for color extraction...
   </text>
   
@@ -93,59 +93,59 @@
   
   <!-- Normal Colors -->
   <g transform="translate(40, 390)">
-    <rect x="0" y="0" width="30" height="30" fill="#000000" stroke="#00FF00" stroke-width="0.5"/>
+    <rect x="0" y="0" width="30" height="30" fill="#001100" stroke="#00FF00" stroke-width="0.5"/>
     <text x="40" y="20" fill="#00FF00" font-family="monospace" font-size="14">Black</text>
     
-    <rect x="150" y="0" width="30" height="30" fill="#7F0000"/>
+    <rect x="150" y="0" width="30" height="30" fill="#00AA00"/>
     <text x="190" y="20" fill="#00FF00" font-family="monospace" font-size="14">Red</text>
     
     <rect x="300" y="0" width="30" height="30" fill="#00FF00"/>
     <text x="340" y="20" fill="#00FF00" font-family="monospace" font-size="14">Green</text>
     
-    <rect x="450" y="0" width="30" height="30" fill="#7FFF00"/>
+    <rect x="450" y="0" width="30" height="30" fill="#00DD00"/>
     <text x="490" y="20" fill="#00FF00" font-family="monospace" font-size="14">Yellow</text>
   </g>
   
   <g transform="translate(40, 430)">
-    <rect x="0" y="0" width="30" height="30" fill="#007F00"/>
+    <rect x="0" y="0" width="30" height="30" fill="#00BB00"/>
     <text x="40" y="20" fill="#00FF00" font-family="monospace" font-size="14">Blue</text>
     
-    <rect x="150" y="0" width="30" height="30" fill="#7F007F"/>
+    <rect x="150" y="0" width="30" height="30" fill="#00CC00"/>
     <text x="190" y="20" fill="#00FF00" font-family="monospace" font-size="14">Magenta</text>
     
-    <rect x="300" y="0" width="30" height="30" fill="#00FFFF"/>
+    <rect x="300" y="0" width="30" height="30" fill="#00EE00"/>
     <text x="340" y="20" fill="#00FF00" font-family="monospace" font-size="14">Cyan</text>
     
-    <rect x="450" y="0" width="30" height="30" fill="#7F7F7F"/>
+    <rect x="450" y="0" width="30" height="30" fill="#00FF00"/>
     <text x="490" y="20" fill="#00FF00" font-family="monospace" font-size="14">White</text>
   </g>
   
   <!-- Bright Colors -->
   <g transform="translate(40, 480)">
-    <rect x="0" y="0" width="30" height="30" fill="#222222"/>
+    <rect x="0" y="0" width="30" height="30" fill="#002200"/>
     <text x="40" y="20" fill="#00FF00" font-family="monospace" font-size="14">Bright Black</text>
     
-    <rect x="150" y="0" width="30" height="30" fill="#FF0000"/>
+    <rect x="150" y="0" width="30" height="30" fill="#00BB00"/>
     <text x="190" y="20" fill="#00FF00" font-family="monospace" font-size="14">Bright Red</text>
     
     <rect x="300" y="0" width="30" height="30" fill="#00FF00"/>
     <text x="340" y="20" fill="#00FF00" font-family="monospace" font-size="14">Bright Green</text>
     
-    <rect x="450" y="0" width="30" height="30" fill="#FFFF00"/>
+    <rect x="450" y="0" width="30" height="30" fill="#00FF00"/>
     <text x="490" y="20" fill="#00FF00" font-family="monospace" font-size="14">Bright Yellow</text>
   </g>
   
   <g transform="translate(40, 520)">
-    <rect x="0" y="0" width="30" height="30" fill="#00FF7F"/>
+    <rect x="0" y="0" width="30" height="30" fill="#00DD00"/>
     <text x="40" y="20" fill="#00FF00" font-family="monospace" font-size="14">Bright Blue</text>
     
-    <rect x="150" y="0" width="30" height="30" fill="#FF00FF"/>
+    <rect x="150" y="0" width="30" height="30" fill="#00EE00"/>
     <text x="190" y="20" fill="#00FF00" font-family="monospace" font-size="14">Bright Magenta</text>
     
-    <rect x="300" y="0" width="30" height="30" fill="#00FFFF"/>
+    <rect x="300" y="0" width="30" height="30" fill="#00FF00"/>
     <text x="340" y="20" fill="#00FF00" font-family="monospace" font-size="14">Bright Cyan</text>
     
-    <rect x="450" y="0" width="30" height="30" fill="#FFFFFF"/>
+    <rect x="450" y="0" width="30" height="30" fill="#00FF00"/>
     <text x="490" y="20" fill="#00FF00" font-family="monospace" font-size="14">Bright White</text>
   </g>
   
@@ -153,32 +153,32 @@
   <rect x="600" y="265" width="380" height="285" fill="#000000" stroke="#00FF00" stroke-width="2" rx="5" ry="5"/>
   
   <!-- Terminal Application Examples -->
-  <text x="610" y="285" fill="#FFFFFF" font-family="monospace" font-size="14" font-weight="bold">Terminal in Action:</text>
+  <text x="610" y="285" fill="#00FF00" font-family="monospace" font-size="14" font-weight="bold">Terminal in Action:</text>
   
   <!-- Code Example -->
   <text x="610" y="310" fill="#00FF00" font-family="monospace" font-size="13">
-    <tspan fill="#007F00">def</tspan> <tspan fill="#00FF00">extract_colors</tspan><tspan fill="#00FF00">(url):</tspan>
+    <tspan fill="#00BB00">def</tspan> <tspan fill="#00FF00">extract_colors</tspan><tspan fill="#00FF00">(url):</tspan>
   </text>
   <text x="630" y="330" fill="#00FF00" font-family="monospace" font-size="13">
-    <tspan fill="#7F0000">try</tspan><tspan fill="#00FF00">:</tspan>
+    <tspan fill="#00AA00">try</tspan><tspan fill="#00FF00">:</tspan>
   </text>
   <text x="650" y="350" fill="#00FF00" font-family="monospace" font-size="13">
-    <tspan fill="#00FF00">response = requests.</tspan><tspan fill="#00FFFF">get</tspan><tspan fill="#00FF00">(url)</tspan>
+    <tspan fill="#00FF00">response = requests.</tspan><tspan fill="#00EE00">get</tspan><tspan fill="#00FF00">(url)</tspan>
   </text>
   <text x="650" y="370" fill="#00FF00" font-family="monospace" font-size="13">
-    <tspan fill="#7F007F">colors</tspan> <tspan fill="#00FF00">= analyze_content(response.text)</tspan>
+    <tspan fill="#00CC00">colors</tspan> <tspan fill="#00FF00">= analyze_content(response.text)</tspan>
   </text>
   <text x="650" y="390" fill="#00FF00" font-family="monospace" font-size="13">
-    <tspan fill="#00FF00">print</tspan><tspan fill="#00FF00">(</tspan><tspan fill="#7FFF00">"Found colors:"</tspan><tspan fill="#00FF00">, colors)</tspan>
+    <tspan fill="#00FF00">print</tspan><tspan fill="#00FF00">(</tspan><tspan fill="#00DD00">"Found colors:"</tspan><tspan fill="#00FF00">, colors)</tspan>
   </text>
   <text x="650" y="410" fill="#00FF00" font-family="monospace" font-size="13">
-    <tspan fill="#FFFF00">return</tspan> <tspan fill="#7F007F">colors</tspan>
+    <tspan fill="#00FF00">return</tspan> <tspan fill="#00CC00">colors</tspan>
   </text>
   <text x="630" y="430" fill="#00FF00" font-family="monospace" font-size="13">
-    <tspan fill="#7F0000">except</tspan> <tspan fill="#FF0000">Exception</tspan> <tspan fill="#7F0000">as</tspan> <tspan fill="#FF0000">e</tspan><tspan fill="#00FF00">:</tspan>
+    <tspan fill="#00AA00">except</tspan> <tspan fill="#00BB00">Exception</tspan> <tspan fill="#00AA00">as</tspan> <tspan fill="#00BB00">e</tspan><tspan fill="#00FF00">:</tspan>
   </text>
   <text x="650" y="450" fill="#00FF00" font-family="monospace" font-size="13">
-    <tspan fill="#00FF00">print</tspan><tspan fill="#00FF00">(</tspan><tspan fill="#7F0000">f"Error: {e}"</tspan><tspan fill="#00FF00">)</tspan>
+    <tspan fill="#00FF00">print</tspan><tspan fill="#00FF00">(</tspan><tspan fill="#00AA00">f"Error: {e}"</tspan><tspan fill="#00FF00">)</tspan>
   </text>
   
   <!-- Search and Selection Example -->
@@ -198,7 +198,7 @@
   <!-- Command Prompt -->
   <rect x="0" y="570" width="1000" height="2" fill="#00FF00" opacity="0.5"/>
   <text x="20" y="590" fill="#00FF00" font-family="monospace" font-size="14">
-    <tspan fill="#00FF00">➜</tspan>  <tspan fill="#00FF00">~/projects</tspan> <tspan fill="#00FFFF">|</tspan>
+    <tspan fill="#00FF00">➜</tspan>  <tspan fill="#00FF00">~/projects</tspan> <tspan fill="#00EE00">|</tspan>
   </text>
   
   <!-- Blinking cursor with accent color -->

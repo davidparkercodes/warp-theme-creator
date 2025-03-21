@@ -70,7 +70,6 @@ class ThemeGenerator:
         theme["foreground"] = foreground
         theme["name"] = name
         
-        # Set terminal colors
         for color_type in ["normal", "bright"]:
             for color_name in theme["terminal_colors"][color_type]:
                 if color_type == "normal" and color_name in terminal_colors:
@@ -78,7 +77,6 @@ class ThemeGenerator:
                 elif color_type == "bright" and f"bright_{color_name}" in terminal_colors:
                     theme["terminal_colors"][color_type][color_name] = terminal_colors[f"bright_{color_name}"]
         
-        # Add background image if provided
         if background_image:
             theme["background_image"] = {
                 "path": background_image,
@@ -108,17 +106,13 @@ class ThemeGenerator:
         Returns:
             Path to the saved theme file
         """
-        # Create sanitized filename from theme name
         theme_name = theme.get("name", "generated_theme")
         filename = self._sanitize_filename(theme_name) + ".yaml"
         
-        # Create output directory if it doesn't exist
         os.makedirs(output_path, exist_ok=True)
         
-        # Full path to save the theme
         full_path = os.path.join(output_path, filename)
         
-        # Write theme to file
         with open(full_path, 'w') as f:
             f.write(self.generate_yaml(theme))
         
@@ -133,7 +127,6 @@ class ThemeGenerator:
         Returns:
             Sanitized string
         """
-        # Replace spaces with underscores and remove special characters
         sanitized = ''
         for char in name:
             if char.isalnum() or char in '_-':
@@ -141,7 +134,6 @@ class ThemeGenerator:
             elif char.isspace():
                 sanitized += '_'
         
-        # Ensure it's not empty and doesn't start with a dash
         if not sanitized or sanitized.startswith('-'):
             sanitized = 'theme_' + sanitized
         
@@ -161,7 +153,6 @@ class ThemeGenerator:
         if not all(field in theme for field in required_fields):
             return False
         
-        # Check terminal colors structure
         if "normal" not in theme["terminal_colors"] or "bright" not in theme["terminal_colors"]:
             return False
         

@@ -30,27 +30,21 @@ def adjust_color_brightness(hex_color: str, factor: float) -> str:
     Returns:
         Adjusted hex color
     """
-    # Strip the leading '#' if present
     hex_color = hex_color.lstrip('#')
     
-    # Convert to RGB
     if len(hex_color) == 3:
-        # Handle 3-digit hex codes
         r = int(hex_color[0] + hex_color[0], 16)
         g = int(hex_color[1] + hex_color[1], 16)
         b = int(hex_color[2] + hex_color[2], 16)
     else:
-        # Handle 6-digit hex codes
         r = int(hex_color[0:2], 16)
         g = int(hex_color[2:4], 16)
         b = int(hex_color[4:6], 16)
     
-    # Adjust brightness
     r = min(255, max(0, int(r * factor)))
     g = min(255, max(0, int(g * factor)))
     b = min(255, max(0, int(b * factor)))
     
-    # Convert back to hex
     return f'#{r:02x}{g:02x}{b:02x}'
 
 
@@ -64,31 +58,23 @@ def adjust_color_saturation(hex_color: str, factor: float) -> str:
     Returns:
         Adjusted hex color
     """
-    # Strip the leading '#' if present
     hex_color = hex_color.lstrip('#')
     
-    # Convert to RGB
     if len(hex_color) == 3:
-        # Handle 3-digit hex codes
         r = int(hex_color[0] + hex_color[0], 16)
         g = int(hex_color[1] + hex_color[1], 16)
         b = int(hex_color[2] + hex_color[2], 16)
     else:
-        # Handle 6-digit hex codes
         r = int(hex_color[0:2], 16)
         g = int(hex_color[2:4], 16)
         b = int(hex_color[4:6], 16)
     
-    # Convert RGB to HSL
     h, s, l = rgb_to_hsl(r, g, b)
     
-    # Adjust saturation
     s = min(1.0, max(0.0, s * factor))
     
-    # Convert back to RGB
     r, g, b = hsl_to_rgb(h, s, l)
     
-    # Convert back to hex
     return f'#{r:02x}{g:02x}{b:02x}'
 
 
@@ -103,34 +89,29 @@ def rgb_to_hsl(r: int, g: int, b: int) -> Tuple[float, float, float]:
     Returns:
         HSL tuple (h: 0-360, s: 0-1, l: 0-1)
     """
-    # Convert RGB to [0, 1] range
     r /= 255
     g /= 255
     b /= 255
     
-    # Find min and max values
     cmax = max(r, g, b)
     cmin = min(r, g, b)
     delta = cmax - cmin
     
-    # Calculate hue
     h = 0
     if delta != 0:
         if cmax == r:
             h = ((g - b) / delta) % 6
         elif cmax == g:
             h = (b - r) / delta + 2
-        else:  # cmax == b
+        else:
             h = (r - g) / delta + 4
     
     h = round(h * 60)
     if h < 0:
         h += 360
     
-    # Calculate lightness
     l = (cmax + cmin) / 2
     
-    # Calculate saturation
     s = 0
     if delta != 0:
         s = delta / (1 - abs(2 * l - 1))
@@ -149,7 +130,6 @@ def hsl_to_rgb(h: float, s: float, l: float) -> Tuple[int, int, int]:
     Returns:
         RGB tuple (r: 0-255, g: 0-255, b: 0-255)
     """
-    # Helper function
     def hue_to_rgb(p, q, t):
         if t < 0:
             t += 1
@@ -163,11 +143,9 @@ def hsl_to_rgb(h: float, s: float, l: float) -> Tuple[int, int, int]:
             return p + (q - p) * (2/3 - t) * 6
         return p
     
-    # Convert hue to [0, 1] range
     h /= 360
     
     if s == 0:
-        # Achromatic (gray)
         r = g = b = l
     else:
         q = l * (1 + s) if l < 0.5 else l + s - l * s
@@ -176,7 +154,6 @@ def hsl_to_rgb(h: float, s: float, l: float) -> Tuple[int, int, int]:
         g = hue_to_rgb(p, q, h)
         b = hue_to_rgb(p, q, h - 1/3)
     
-    # Convert to [0, 255] range
     r = round(r * 255)
     g = round(g * 255)
     b = round(b * 255)

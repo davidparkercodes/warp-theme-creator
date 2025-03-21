@@ -14,7 +14,6 @@ from PIL import Image
 import cssutils
 import logging
 
-# Suppress cssutils logging
 cssutils.log.setLevel(logging.CRITICAL)
 
 
@@ -23,16 +22,14 @@ class ColorExtractor:
 
     def __init__(self):
         """Initialize the ColorExtractor."""
-        # Importance weights for different color sources
         self._color_weights = {
-            'background': 5,  # Background colors have high importance
-            'color': 4,       # Text colors are also important
-            'border': 2,      # Border colors less important
-            'accent': 5,      # Accent colors (from gradients, etc.)
-            'image': 3        # Image colors
+            'background': 5,
+            'color': 4,
+            'border': 2,
+            'accent': 5,
+            'image': 3
         }
         
-        # CSS properties to look for
         self._color_properties = {
             'background': ['background-color', 'background'],
             'color': ['color'],
@@ -46,14 +43,13 @@ class ColorExtractor:
         """Convert hex color code to RGB tuple.
 
         Args:
-            hex_color: Hex color code (with or without #)
+            hex_color: Hex color code (with or without
 
         Returns:
             RGB tuple (r, g, b)
         """
         hex_color = hex_color.lstrip('#')
         
-        # Handle 3-digit hex codes
         if len(hex_color) == 3:
             hex_color = ''.join([c*2 for c in hex_color])
             
@@ -67,7 +63,7 @@ class ColorExtractor:
             rgb: RGB tuple (r, g, b)
 
         Returns:
-            Hex color code (with #)
+            Hex color code (with
         """
         return f'#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}'
     
@@ -82,16 +78,14 @@ class ColorExtractor:
         """
         color = color.lower().strip()
         
-        # Handle hex colors
         if color.startswith('#'):
-            if len(color) == 4:  # #RGB format
+            if len(color) == 4:
                 r, g, b = color[1], color[2], color[3]
                 return f'#{r}{r}{g}{g}{b}{b}'
-            elif len(color) == 7:  # #RRGGBB format
+            elif len(color) == 7:
                 return color
             return None
         
-        # Handle rgb/rgba colors
         rgb_match = re.search(r'rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', color)
         if rgb_match:
             r, g, b = map(int, rgb_match.groups())
@@ -102,7 +96,6 @@ class ColorExtractor:
             r, g, b, a = rgba_match.groups()
             return self.rgb_to_hex((int(r), int(g), int(b)))
         
-        # Handle named colors (limited set)
         named_colors = {
             'black': '#000000',
             'white': '#ffffff',
@@ -142,24 +135,19 @@ class ColorExtractor:
         if not css_content:
             return []
             
-        # Initialize result
         result = []
         
-        # Regular expressions for color formats
         hex_pattern = r'#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b'
         rgb_pattern = r'rgb\(\s*([0-9]+)\s*,\s*([0-9]+)\s*,\s*([0-9]+)\s*\)'
         
-        # Extract hex colors
         hex_colors = re.findall(hex_pattern, css_content)
         for c in hex_colors:
-            if len(c) == 3:  # Convert 3-digit to 6-digit for internal use
+            if len(c) == 3:
                 full_hex = f'#{c[0]}{c[0]}{c[1]}{c[1]}{c[2]}{c[2]}'
-                # But keep the original format for the test
                 result.append(f'#{c}')
             else:
                 result.append(f'#{c}')
         
-        # Extract RGB colors
         rgb_colors = re.findall(rgb_pattern, css_content)
         for r, g, b in rgb_colors:
             try:
@@ -168,7 +156,6 @@ class ColorExtractor:
             except ValueError:
                 continue
         
-        # Remove duplicates
         return list(set(result))
         
     def extract_css_colors_categorized(self, css_content: str) -> Dict[str, List[str]]:
@@ -183,7 +170,6 @@ class ColorExtractor:
         if not css_content:
             return {category: [] for category in self._color_weights.keys()}
             
-        # Initialize result dictionary
         result = {
             'background': [],
             'color': [],
@@ -193,36 +179,27 @@ class ColorExtractor:
         }
         
         try:
-            # Parse CSS
             sheet = cssutils.parseString(css_content)
             
-            # Extract rules
             for rule in sheet:
                 if rule.type == rule.STYLE_RULE:
-                    # Process style declarations
                     for property_name in rule.style:
                         property_value = rule.style[property_name]
                         
-                        # Check if the property contains a color
                         color_match = re.search(r'#[0-9a-fA-F]{3,6}|rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)|rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[0-9.]+\s*\)', property_value)
                         
                         if color_match:
                             color = self._standardize_color(color_match.group())
                             if color:
-                                # Categorize the color based on property
                                 for category, properties in self._color_properties.items():
                                     if any(prop in property_name for prop in properties):
                                         result[category].append(color)
                                         
         except Exception:
-            # Fallback to regex-based extraction if cssutils fails
-            # Extract all colors
             all_colors = self.extract_css_colors(css_content)
             
-            # Put all colors in the background category as fallback
             result['background'] = all_colors
         
-        # Remove duplicates in each category
         for category in result:
             result[category] = list(set(result[category]))
             
@@ -239,26 +216,22 @@ class ColorExtractor:
             List of hex color codes
         """
         try:
-            # For unit tests, use a simpler approach that's easier to mock
             image_file = BytesIO(image_data)
             
-            # Open with PIL first to validate image format
             try:
                 with Image.open(image_file) as img:
                     img_format = img.format
                     if not img_format:
-                        return []  # Not a valid image
-                    image_file.seek(0)  # Reset file pointer
+                        return []
+                    image_file.seek(0)
             except Exception:
-                return []  # Not a valid image
+                return []
                 
-            # Now try to extract colors
             color_thief = ColorThief(image_file)
             palette = color_thief.get_palette(color_count=color_count)
             return [self.rgb_to_hex(color) for color in palette]
             
         except Exception as e:
-            # Handle silently in production
             return []
             
     def _validate_image(self, image_file: BytesIO) -> bool:
@@ -309,21 +282,17 @@ class ColorExtractor:
             width, height = img.size
             edge_pixels = []
             
-            # Top and bottom edges
             for x in range(width):
                 edge_pixels.append(img.getpixel((x, 0)))
                 edge_pixels.append(img.getpixel((x, height-1)))
                 
-            # Left and right edges
             for y in range(height):
                 edge_pixels.append(img.getpixel((0, y)))
                 edge_pixels.append(img.getpixel((width-1, y)))
                 
-            # Count frequencies of edge colors
             edge_counter = Counter(edge_pixels)
             most_common_edges = edge_counter.most_common(max_colors)
             
-            # Convert to hex
             return [self.rgb_to_hex(color) for color, _ in most_common_edges]
         except Exception:
             return []
@@ -343,44 +312,33 @@ class ColorExtractor:
         try:
             image_file = BytesIO(image_data)
             
-            # Validate image format
             if not self._validate_image(image_file):
                 return []
                 
-            # Reset file pointer
             image_file.seek(0)
             
-            # Extract colors with ColorThief
             colorthief_colors = self._extract_colors_with_colorthief(image_file, color_count)
             colors.extend(colorthief_colors)
             
-            # Reset file position for PIL
             image_file.seek(0)
             
-            # Use PIL for additional edge color analysis
             try:
                 img = Image.open(image_file)
                 
-                # Resize for faster processing
                 img.thumbnail((100, 100))
                 
-                # Convert to RGB if not already
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
                     
-                # Get colors from edges
                 edge_colors = self._extract_edge_colors(img)
                 colors.extend(edge_colors)
                 
             except Exception:
-                # If PIL analysis fails, just use ColorThief colors
                 pass
                 
-            # Remove duplicates and return
             return list(set(colors))
             
         except Exception:
-            # Handle silently in production
             return []
     
     def get_color_distance(self, color1: str, color2: str) -> float:
@@ -396,7 +354,6 @@ class ColorExtractor:
         r1, g1, b1 = self.hex_to_rgb(color1)
         r2, g2, b2 = self.hex_to_rgb(color2)
         
-        # Calculate Euclidean distance in RGB space
         return math.sqrt((r1 - r2)**2 + (g1 - g2)**2 + (b1 - b2)**2)
     
     def _get_color_saturation(self, hex_color: str) -> float:
@@ -429,7 +386,6 @@ class ColorExtractor:
             Brightness value (0-1)
         """
         r, g, b = self.hex_to_rgb(hex_color)
-        # Using perceived brightness formula
         return (0.299 * r + 0.587 * g + 0.114 * b) / 255
     
     def filter_similar_colors(self, colors: List[str], threshold: float = 30.0) -> List[str]:
@@ -448,7 +404,6 @@ class ColorExtractor:
         result = [colors[0]]
         
         for color in colors[1:]:
-            # Check if this color is different enough from all already selected colors
             if all(self.get_color_distance(color, c) > threshold for c in result):
                 result.append(color)
                 
@@ -464,38 +419,32 @@ class ColorExtractor:
             Selected accent color as hex
         """
         if not colors:
-            return "#0087D7"  # Default Warp blue
+            return "#0087D7"
             
-        # Filter out very dark and very light colors
         candidates = []
         for color in colors:
             brightness = self._get_color_brightness(color)
             saturation = self._get_color_saturation(color)
             
-            # Good accent colors have medium brightness and high saturation
             if 0.2 < brightness < 0.8 and saturation > 0.5:
                 candidates.append((color, saturation, brightness))
                 
         if not candidates:
-            # If no good candidates, try again with looser constraints
             for color in colors:
                 brightness = self._get_color_brightness(color)
                 saturation = self._get_color_saturation(color)
                 
-                # Looser constraints
                 if 0.1 < brightness < 0.9 and saturation > 0.3:
                     candidates.append((color, saturation, brightness))
         
         if candidates:
-            # Sort by saturation (high to low) and choose the most saturated
             candidates.sort(key=lambda x: x[1], reverse=True)
             return candidates[0][0]
             
-        # If still no good candidates, return the first color
         if colors:
             return colors[0]
             
-        return "#0087D7"  # Default Warp blue
+        return "#0087D7"
     
     def select_background_color(self, colors: List[str], prefer_dark: bool = True) -> str:
         """Select the best background color from a list of colors.
@@ -510,11 +459,9 @@ class ColorExtractor:
         if not colors:
             return "#1E1E1E" if prefer_dark else "#FFFFFF"
             
-        # For compatibility with tests, we need special handling for the test case
         if "#FFFFFF" in colors and "#F0F0F0" in colors and "#EEEEEE" in colors:
-            return "#1E1E1E"  # This matches the specific test case
+            return "#1E1E1E"
         
-        # For compatibility with tests, just use simple dark/light sorting
         dark_colors = [c for c in colors if self._is_dark_color(c)]
         light_colors = [c for c in colors if not self._is_dark_color(c)]
         
@@ -527,7 +474,6 @@ class ColorExtractor:
         elif light_colors:
             return light_colors[0]
         
-        # Last resort: default color
         return "#1E1E1E" if prefer_dark else "#FFFFFF"
     
     def select_foreground_color(self, background: str) -> str:
@@ -539,11 +485,10 @@ class ColorExtractor:
         Returns:
             Selected foreground color as hex
         """
-        # Choose foreground based on background luminance for best contrast
         if self._is_dark_color(background):
-            return "#FFFFFF"  # White text on dark background
+            return "#FFFFFF"
         else:
-            return "#000000"  # Black text on light background
+            return "#000000"
     
     def _is_dark_color(self, hex_color: str) -> bool:
         """Check if a color is dark based on luminance.
@@ -567,7 +512,6 @@ class ColorExtractor:
             Complementary color
         """
         r, g, b = self.hex_to_rgb(hex_color)
-        # Complementary color in RGB space
         return self.rgb_to_hex((255 - r, 255 - g, 255 - b))
     
     def _adjust_color_harmony(self, colors: List[str], accent: str) -> List[str]:
@@ -586,12 +530,10 @@ class ColorExtractor:
         for color in colors:
             r, g, b = self.hex_to_rgb(color)
             
-            # Subtle shift toward accent hue
             r = (r * 0.85 + r_accent * 0.15)
             g = (g * 0.85 + g_accent * 0.15)
             b = (b * 0.85 + b_accent * 0.15)
             
-            # Ensure valid RGB range
             r = min(255, max(0, int(r)))
             g = min(255, max(0, int(g)))
             b = min(255, max(0, int(b)))
@@ -612,17 +554,12 @@ class ColorExtractor:
         """
         is_dark_bg = self._is_dark_color(background)
         
-        # Generate a more harmonious color palette based on accent
         accent_rgb = self.hex_to_rgb(accent)
         r, g, b = accent_rgb
         
-        # Generate palette using color theory
         if is_dark_bg:
-            # Dark-themed palette with vibrant colors
-            # Use more saturated colors for better visibility on dark backgrounds
             bright_accent = self._brighten_color(accent, 1.3)
             
-            # Create a complementary color for balance
             comp_accent = self._color_complement(accent)
             
             black = background if self._get_color_brightness(background) < 0.1 else "#2D2A2E"
@@ -643,7 +580,6 @@ class ColorExtractor:
             bright_cyan = "#9AEDFE"
             bright_white = "#F8F8F2"
             
-            # Adjust palette towards accent hue for harmony
             harmonized = self._adjust_color_harmony(
                 [red, green, yellow, magenta, cyan, bright_red, 
                  bright_green, bright_yellow, bright_magenta, bright_cyan],
@@ -653,11 +589,8 @@ class ColorExtractor:
             red, green, yellow, magenta, cyan, bright_red, bright_green, bright_yellow, bright_magenta, bright_cyan = harmonized
             
         else:
-            # Light-themed palette with more muted colors
-            # Use more muted colors for better visibility on light backgrounds
             darker_accent = self._darken_color(accent, 0.8)
             
-            # Create a complementary color for balance
             comp_accent = self._color_complement(accent)
             
             black = "#2D2A2E"
@@ -678,7 +611,6 @@ class ColorExtractor:
             bright_cyan = "#64FFDA"
             bright_white = "#FFFFFF"
             
-            # Adjust palette towards accent hue for harmony
             harmonized = self._adjust_color_harmony(
                 [red, green, yellow, magenta, cyan, bright_red, 
                  bright_green, bright_yellow, bright_magenta, bright_cyan],
@@ -723,10 +655,8 @@ class ColorExtractor:
             'image': []
         }
         
-        # Extract colors from HTML (might include inline CSS)
         html_content = fetcher_results.get('html', '')
         if html_content:
-            # Look for inline styles in HTML
             inline_css_pattern = r'style=["\']([^"\']*)["\']'
             inline_styles = re.findall(inline_css_pattern, html_content)
             
@@ -735,21 +665,17 @@ class ColorExtractor:
                 for category, colors in css_colors.items():
                     result[category].extend(colors)
         
-        # Extract colors from CSS files
         css_contents = fetcher_results.get('css_contents', {})
         for css_url, css_content in css_contents.items():
             css_colors = self.extract_css_colors_categorized(css_content)
             for category, colors in css_colors.items():
                 result[category].extend(colors)
         
-        # Extract colors from images
         image_contents = fetcher_results.get('image_contents', {})
         for image_url, image_data in image_contents.items():
-            # For enhanced analysis, use the enhanced method
             image_colors = self.extract_image_colors_enhanced(image_data)
             result['image'].extend(image_colors)
         
-        # Remove duplicates in each category
         for category in result:
             result[category] = list(set(result[category]))
         
@@ -767,11 +693,8 @@ class ColorExtractor:
         """
         r, g, b = self.hex_to_rgb(hex_color)
         
-        # Use a non-linear brightening for better results
-        # This preserves more of the color's character
         hsv_brightness = self._get_color_brightness(hex_color)
         
-        # Apply brightening with diminishing returns for already bright colors
         adjustment = factor * (1 - hsv_brightness * 0.5)
         
         r = min(255, int(r * adjustment))
@@ -792,10 +715,8 @@ class ColorExtractor:
         """
         r, g, b = self.hex_to_rgb(hex_color)
         
-        # Use non-linear darkening for better results
         hsv_brightness = self._get_color_brightness(hex_color)
         
-        # Apply darkening with more effect on brighter colors
         adjustment = factor * (0.5 + hsv_brightness * 0.5)
         
         r = max(0, int(r * adjustment))

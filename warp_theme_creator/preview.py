@@ -15,7 +15,6 @@ except ImportError:
     CAIROSVG_AVAILABLE = False
 
 
-# Enhanced SVG template for theme preview - showcases all terminal colors in practical contexts
 DEFAULT_SVG_TEMPLATE = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600">
   <!-- Terminal Window with Warp-like styling -->
   <defs>
@@ -246,25 +245,20 @@ class ThemePreviewGenerator:
         """
         color_dict = {}
         
-        # Add name for title
         color_dict["name"] = theme.get("name", "Generated Theme")
         
-        # Add accent, foreground, background
         color_dict["accent"] = theme.get("accent", "#0087D7")
         color_dict["foreground"] = theme.get("foreground", "#FFFFFF")
         color_dict["background"] = theme.get("background", "#1E1E1E")
         
-        # Add normal colors
         normal_colors = theme.get("terminal_colors", {}).get("normal", {})
         for color_name, color_value in normal_colors.items():
             color_dict[color_name] = color_value
         
-        # Add bright colors with "br" prefix
         bright_colors = theme.get("terminal_colors", {}).get("bright", {})
         for color_name, color_value in bright_colors.items():
             color_dict[f"br{color_name}"] = color_value
         
-        # Set defaults for any missing colors
         default_colors = {
             "black": "#000000", "red": "#FF0000", "green": "#00FF00", "yellow": "#FFFF00",
             "blue": "#0000FF", "magenta": "#FF00FF", "cyan": "#00FFFF", "white": "#FFFFFF",
@@ -290,7 +284,6 @@ class ThemePreviewGenerator:
         color_dict = self.generate_color_dict(theme)
         svg_content = self.svg_template
         
-        # Replace placeholders with actual colors
         for key, value in color_dict.items():
             if isinstance(value, str):
                 svg_content = svg_content.replace(f"{{{key}}}", value)
@@ -336,28 +329,22 @@ class ThemePreviewGenerator:
         Returns:
             Tuple of (svg_path, png_path or None)
         """
-        # Create sanitized filename from theme name
         theme_name = theme.get("name", "generated_theme")
         sanitized_name = ''.join(c for c in theme_name.lower() if c.isalnum() or c == '_')
         svg_filename = f"{sanitized_name}_preview.svg"
         png_filename = f"{sanitized_name}_preview.png"
         
-        # Create previews directory if it doesn't exist
         previews_dir = os.path.join(output_path, "previews")
         os.makedirs(previews_dir, exist_ok=True)
         
-        # Full paths to save the previews
         svg_path = os.path.join(previews_dir, svg_filename)
         png_path = os.path.join(previews_dir, png_filename) if generate_png else None
         
-        # Generate SVG content
         svg_content = self.generate_svg(theme)
         
-        # Write SVG to file
         with open(svg_path, 'w') as f:
             f.write(svg_content)
         
-        # Generate and save PNG if requested
         if generate_png and CAIROSVG_AVAILABLE:
             try:
                 png_data = self.svg_to_png(svg_content)
@@ -383,7 +370,6 @@ class ThemePreviewGenerator:
         Returns:
             List of tuples with (svg_path, png_path or None)
         """
-        # Get all theme files in directory
         theme_files = [f for f in os.listdir(themes_dir) 
                       if f.endswith(('.yaml', '.yml')) and os.path.isfile(os.path.join(themes_dir, f))]
         
@@ -391,12 +377,10 @@ class ThemePreviewGenerator:
         
         for theme_file in theme_files:
             try:
-                # Load theme file
                 theme_path = os.path.join(themes_dir, theme_file)
                 with open(theme_path, 'r') as f:
                     theme = yaml.safe_load(f)
                 
-                # Generate and save previews
                 preview_paths = self.save_previews(theme, themes_dir, generate_png)
                 generated_previews.append(preview_paths)
                 

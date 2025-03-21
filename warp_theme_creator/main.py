@@ -159,7 +159,6 @@ def fetch_website_resources(fetcher: Fetcher, url: str, max_css: int, max_images
         print("Error: Failed to fetch HTML content.")
         return resources
     
-    # Fetch CSS files
     css_urls = resources.get('css_urls', [])
     css_contents = {}
     
@@ -175,7 +174,6 @@ def fetch_website_resources(fetcher: Fetcher, url: str, max_css: int, max_images
     
     resources['css_contents'] = css_contents
     
-    # Fetch images
     image_urls = resources.get('image_urls', [])
     image_contents = {}
     
@@ -208,7 +206,6 @@ def validate_image(img_file: BytesIO) -> Optional[Tuple[int, int, float]]:
             if not img.format:
                 return None
             
-            # Calculate size and aspect ratio
             width, height = img.size
             aspect_ratio = width / height if height > 0 else 0
             
@@ -234,17 +231,14 @@ def filter_suitable_background_images(resources: Dict) -> List[Dict]:
     for image_url, image_bytes in resources.get('image_contents', {}).items():
         try:
             with BytesIO(image_bytes) as img_file:
-                # Validate image and get dimensions
                 dimensions = validate_image(img_file)
                 if not dimensions:
                     continue
                     
                 width, height, aspect_ratio = dimensions
                 
-                # Reset file pointer
                 img_file.seek(0)
                 
-                # Skip very small images and images with extreme aspect ratios
                 size = width * height
                 if size < 10000 or aspect_ratio > 5 or aspect_ratio < 0.2:
                     continue
@@ -259,7 +253,6 @@ def filter_suitable_background_images(resources: Dict) -> List[Dict]:
         except Exception:
             continue
     
-    # Sort by size (largest first)
     image_data.sort(key=lambda x: x['size'], reverse=True)
     return image_data
 
@@ -298,27 +291,21 @@ def save_background_image(image_data: Dict, theme_name: str, output_dir: str) ->
     Returns:
         Path to saved image or None if operation failed
     """
-    # Create images directory
     images_dir = os.path.join(output_dir, "images")
     os.makedirs(images_dir, exist_ok=True)
     
-    # Generate filename
     sanitized_name = ''.join(c for c in theme_name.lower() if c.isalnum() or c == '_')
     filename = f"{sanitized_name}_background.jpg"
     output_path = os.path.join(images_dir, filename)
     
-    # Convert and save image as JPG (for compatibility)
     try:
         with BytesIO(image_data['bytes']) as img_file:
             with Image.open(img_file) as img:
-                # Convert to RGB mode if needed
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
                 
-                # Resize if necessary
                 img = resize_image_if_needed(img)
                 
-                # Save as JPG
                 img.save(output_path, "JPEG", quality=90)
                 return output_path
     except Exception:
@@ -338,17 +325,13 @@ def extract_background_image(resources: Dict, theme_name: str, output_dir: str) 
     Returns:
         Path to saved background image or None if no suitable image found
     """
-    # Filter and sort images by suitability
     image_data = filter_suitable_background_images(resources)
     
-    # If no valid images found
     if not image_data:
         return None
     
-    # Select the largest image
     selected_image = image_data[0]
     
-    # Save the selected image
     return save_background_image(selected_image, theme_name, output_dir)
 
 
@@ -366,31 +349,26 @@ def score_logo_image(image_url: str, img: Image.Image) -> int:
     width, height = img.size
     size = width * height
     
-    # 1. Logos are typically smaller than screenshots/photos
-    if size < 50000:  # Small image
+    if size < 50000:
         score += 20
-    elif size < 150000:  # Medium image
+    elif size < 150000:
         score += 10
-    else:  # Large image (likely screenshot)
+    else:
         score -= 10
     
-    # 2. Logos often have transparency
     if img.mode == 'RGBA':
         score += 10
     
-    # 3. Logos often have specific keywords in the URL
     url_lower = image_url.lower()
     if any(keyword in url_lower for keyword in ['logo', 'brand', 'icon', 'symbol', 'header']):
         score += 25
     
-    # 4. Logos usually have reasonable aspect ratios
     aspect_ratio = width / height if height > 0 else 0
-    if 0.5 <= aspect_ratio <= 2.0:  # Reasonable aspect ratio
+    if 0.5 <= aspect_ratio <= 2.0:
         score += 10
-    else:  # Very wide or very tall
+    else:
         score -= 5
         
-    # 5. SVG and PNG are common for logos
     if url_lower.endswith(('.svg', '.png')):
         score += 15
         
@@ -413,10 +391,8 @@ def process_image_for_logo(image_url: str, image_data: bytes) -> Optional[Dict]:
                 if not img.format:
                     return None
                     
-                # Score the image based on logo heuristics
                 score = score_logo_image(image_url, img)
                 
-                # Image dimensions
                 width, height = img.size
                 size = width * height
                 
@@ -443,11 +419,9 @@ def identify_logo_images(resources: Dict) -> Dict[str, bytes]:
     """
     image_contents = resources.get('image_contents', {})
     
-    # Skip if no images
     if not image_contents:
         return {}
         
-    # Process images to find potential logos
     scored_images = []
     
     for image_url, image_data in image_contents.items():
@@ -455,13 +429,10 @@ def identify_logo_images(resources: Dict) -> Dict[str, bytes]:
         if scored_image:
             scored_images.append(scored_image)
     
-    # Sort images by score (descending)
     scored_images.sort(key=lambda x: x['score'], reverse=True)
     
-    # Take top 3 potential logo images
     top_images = scored_images[:3] if scored_images else []
     
-    # Return as dict
     return {img['url']: img['data'] for img in top_images}
 
 def extract_css_colors_from_html(color_extractor: ColorExtractor, html_content: str) -> Tuple[List[str], Dict[str, List[str]]]:
@@ -561,11 +532,9 @@ def extract_colors_from_general_images(color_extractor: ColorExtractor, image_co
     all_colors = []
     
     for image_url, image_data in image_contents.items():
-        # Skip logos we already processed
         if image_url in logo_images:
             continue
             
-        # Use enhanced color extraction for better results
         image_colors = color_extractor.extract_image_colors_enhanced(image_data)
         all_colors.extend(image_colors)
         
@@ -583,7 +552,6 @@ def prioritize_accent_candidates(logo_colors: List[str], categorized_colors: Dic
         Prioritized list of accent color candidates
     """
     if logo_colors:
-        # Logo colors get high priority for accent
         return (
             logo_colors +
             categorized_colors['accent'] + 
@@ -592,7 +560,6 @@ def prioritize_accent_candidates(logo_colors: List[str], categorized_colors: Dic
             categorized_colors['background']
         )
     else:
-        # Original priority
         return (
             categorized_colors['accent'] + 
             categorized_colors['image'] + 
@@ -613,7 +580,6 @@ def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefe
     Returns:
         Dictionary with accent, background, and foreground colors
     """
-    # Initialize color collections
     all_colors = []
     categorized_colors = {
         'background': [],
@@ -623,7 +589,6 @@ def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefe
         'image': []
     }
     
-    # Extract colors from HTML inline styles
     html_colors, html_categorized = extract_css_colors_from_html(
         color_extractor, 
         resources.get('html', '')
@@ -632,7 +597,6 @@ def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefe
     for category in categorized_colors:
         categorized_colors[category].extend(html_categorized[category])
     
-    # Extract colors from CSS stylesheets
     css_colors, css_categorized = extract_css_colors_from_stylesheets(
         color_extractor, 
         resources.get('css_contents', {})
@@ -641,7 +605,6 @@ def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefe
     for category in categorized_colors:
         categorized_colors[category].extend(css_categorized[category])
     
-    # Extract colors from logo images
     logo_images = identify_logo_images(resources)
     logo_image_colors, logo_colors = extract_colors_from_logos(
         color_extractor, 
@@ -650,7 +613,6 @@ def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefe
     all_colors.extend(logo_image_colors)
     categorized_colors['image'].extend(logo_image_colors)
     
-    # Use general images if no logo colors found
     if not logo_colors:
         print("No logo detected, using general site imagery...")
         general_image_colors = extract_colors_from_general_images(
@@ -663,23 +625,19 @@ def extract_theme_colors(color_extractor: ColorExtractor, resources: Dict, prefe
     else:
         print(f"Using colors from {len(logo_images)} potential logo/brand images...")
     
-    # Remove duplicates
     all_colors = list(set(all_colors))
     for category in categorized_colors:
         categorized_colors[category] = list(set(categorized_colors[category]))
     
-    # Prioritize accent color candidates
     accent_candidates = prioritize_accent_candidates(logo_colors, categorized_colors)
     accent_color = color_extractor.select_accent_color(accent_candidates) if accent_candidates else "#0087D7"
     
-    # Extract background color (prioritize background category)
     background_candidates = categorized_colors['background'] + all_colors
     background_color = color_extractor.select_background_color(
         background_candidates, 
         prefer_dark=not prefer_light
     ) if background_candidates else ("#FFFFFF" if prefer_light else "#1E1E1E")
     
-    # Determine foreground color based on background
     foreground_color = color_extractor.select_foreground_color(background_color)
     
     return {
@@ -870,24 +828,19 @@ def main(args: Optional[List[str]] = None) -> int:
     
     parsed_args = parse_args(args)
     
-    # Create instances of our modules
     fetcher = Fetcher()
     color_extractor = ColorExtractor()
     theme_generator = ThemeGenerator()
     
-    # Validate URL
     if not fetcher.validate_url(parsed_args.url):
         print(f"Error: Invalid URL format: {parsed_args.url}")
         print("Please provide a valid URL starting with http:// or https://")
         return 1
     
-    # Set up the output directory
     output_dir = initialize_output_directory(parsed_args.output)
     
-    # Generate theme name
     theme_name = determine_theme_name(parsed_args.name, parsed_args.url)
     
-    # Extract colors based on selected method
     if parsed_args.use_screenshot:
         theme_colors = extract_colors_using_screenshot(
             parsed_args.url,
@@ -896,7 +849,6 @@ def main(args: Optional[List[str]] = None) -> int:
             parsed_args.save_screenshot
         )
     else:
-        # Use the traditional approach
         print("Using traditional color extraction...")
         resources = fetch_website_resources(
             fetcher, 
@@ -905,7 +857,6 @@ def main(args: Optional[List[str]] = None) -> int:
             parsed_args.max_images
         )
         
-        # Check if fetching was successful
         if not resources.get('html'):
             return 1
         
@@ -916,7 +867,6 @@ def main(args: Optional[List[str]] = None) -> int:
             parsed_args.prefer_light
         )
     
-    # Apply color adjustments if needed
     theme_colors = apply_color_adjustments(
         theme_colors,
         parsed_args.brightness,
@@ -932,14 +882,11 @@ def main(args: Optional[List[str]] = None) -> int:
     print(f"  Background: {background_color}")
     print(f"  Foreground: {foreground_color}")
     
-    # Generate terminal colors based on accent and background
     terminal_colors = color_extractor.generate_terminal_colors(accent_color, background_color)
     
-    # Handle background image extraction (only with traditional approach)
     background_image_path = None
     if parsed_args.extract_background and not parsed_args.use_screenshot:
         print("Extracting background image...")
-        # Need resources which are only available in traditional approach
         resources = resources if 'resources' in locals() else fetch_website_resources(
             fetcher, 
             parsed_args.url, 
@@ -955,7 +902,6 @@ def main(args: Optional[List[str]] = None) -> int:
         if background_image_path:
             print(f"Background image extracted: {os.path.basename(background_image_path)}")
     
-    # Create and save theme
     theme = theme_generator.create_theme(
         accent=accent_color,
         background=background_color,
@@ -968,16 +914,13 @@ def main(args: Optional[List[str]] = None) -> int:
     
     theme_path = theme_generator.save_theme(theme, output_dir)
     
-    # Generate preview images
     preview_paths = None
     if parsed_args.generate_preview:
         preview_paths = generate_previews(theme, output_dir, parsed_args.png)
     
-    # Generate all previews if requested
     if parsed_args.generate_all_previews:
         generate_all_theme_previews(output_dir, parsed_args.png)
     
-    # Print installation instructions
     print_theme_details(theme_path, background_image_path, preview_paths)
     
     return 0
